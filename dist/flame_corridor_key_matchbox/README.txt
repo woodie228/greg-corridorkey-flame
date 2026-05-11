@@ -26,13 +26,22 @@ Useful output modes:
 - Spill QC: shows where despill is changing the image.
 
 Suggested Flame flow:
-1. Run CorridorKey on the shot outside Flame.
-2. Import the CorridorKey FG and Matte EXR sequences into Flame.
+1. Run Greg CorridorKey / Roundtrip Selected Clip from Flame's right-click menu.
+2. Wait for the generated passes to import back into Flame.
 3. Add Greg Corridor Key Matchbox.
-4. Connect FG to input 1 and Matte to input 2.
-5. Optional: connect your comp background to input 3 and original plate to input 4.
-6. Start with Output Mode = RGBA Key or Composite.
-7. Use Matte Black/White/Gamma, Matte Blur, Matte Choke, and Despill for final polish.
+4. Connect the imported outputs:
+   - CorridorKey_FG -> Matchbox input 1: Corridor FG
+   - CorridorKey_Matte -> Matchbox input 2: Corridor Matte
+   - Optional comp background -> Matchbox input 3: Background
+   - Optional original source plate -> Matchbox input 4: Original Plate
+5. Start with Output Mode = RGBA Key or Composite.
+6. Use Matte Black/White/Gamma, Matte Blur, Matte Choke, and Despill for final polish.
+
+Imported output notes:
+- CorridorKey_FG is the best Matchbox foreground input.
+- CorridorKey_Matte is the best Matchbox matte input.
+- CorridorKey_Comp is a quick preview from EZ-CorridorKey and normally does not need to be connected to the Matchbox.
+- CorridorKey_Processed is useful as a standalone RGBA-style result or comparison, but FG + Matte gives more manual control.
 
 Installed package name:
 - GregCorridorKey.mx
@@ -40,9 +49,11 @@ Installed package name:
 Optional roundtrip automation:
 - `greg_corridor_key_roundtrip.py` installs as a Flame Python custom action.
 - In Flame, select a clip or sequence and choose:
-  Greg Tools / CorridorKey / Roundtrip Selected Clip
-- The action exports an OpenEXR sequence into CorridorKey's `ClipsForInference`,
-  runs CorridorKey, and imports `FG`, `Matte`, and `Processed` outputs back
-  into Flame.
+  Greg CorridorKey / Roundtrip Selected Clip
+- The action exports an OpenEXR sequence, runs EZ-CorridorKey, and imports
+  `FG`, `Matte`, `Comp`, and `Processed` outputs back into Flame.
+- Current limitation: the action does not automatically create a Batch FX setup
+  or wire those imported outputs into this Matchbox. Connect the imported
+  outputs manually using the input notes above.
 - Matchbox cannot trigger this by itself when applied; the Python action is
   the automation layer around the Matchbox.

@@ -47,6 +47,34 @@ Choose `Greg CorridorKey / Roundtrip Selected Clip` to export the selected shot,
 
 Processing speed depends heavily on the Mac. Faster Apple Silicon machines and more unified memory will finish the ML key sooner; slower or lower-memory Macs can take significantly longer, especially on high-resolution or long shots.
 
+## Using The Matchbox After Roundtrip
+
+`Roundtrip Selected Clip` imports the generated passes back into Flame. The current version does **not** automatically build a Batch FX setup or wire the passes into the Matchbox for you. After the outputs are back in Flame, add `GregCorridorKey.mx` as a Matchbox and connect the outputs manually.
+
+Matchbox input order:
+
+1. **Corridor FG**
+   - Connect the imported `CorridorKey_FG` output.
+   - This is the foreground RGB pass and gives the Matchbox the most control.
+2. **Corridor Matte**
+   - Connect the imported `CorridorKey_Matte` output.
+   - If the matte reads as luma/red instead of alpha, adjust the Matchbox `Matte Channel` control.
+3. **Background**
+   - Optional.
+   - Connect your comp background if you want the Matchbox `Composite` output mode.
+4. **Original Plate**
+   - Optional but recommended.
+   - Connect the original source plate if you want to use Matchbox despill/reference controls.
+
+Imported output notes:
+
+- `CorridorKey_FG`: best source for Matchbox input 1.
+- `CorridorKey_Matte`: best source for Matchbox input 2.
+- `CorridorKey_Comp`: quick preview from EZ-CorridorKey; normally not needed as a Matchbox input.
+- `CorridorKey_Processed`: production-ready RGBA-style output from EZ-CorridorKey; useful as a standalone result or comparison, but FG + Matte gives more manual control in the Matchbox.
+
+Suggested starting mode: set the Matchbox `Output Mode` to `RGBA Key` or `Composite`.
+
 ## Installed Files
 
 - `/opt/Autodesk/shared/python/greg_corridor_key_roundtrip.py`

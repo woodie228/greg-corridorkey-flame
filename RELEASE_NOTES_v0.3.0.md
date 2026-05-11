@@ -1,13 +1,13 @@
-# Greg CorridorKey Flame Tools v0.3.0
+# Greg CorridorKey Flame Tools v0.3.1
 
-First public package for the Flame/EZ-CorridorKey integration.
+Documentation update for the first public Flame/EZ-CorridorKey integration package. This release clarifies how to use the Matchbox after roundtrip import.
 
 ## Included Assets
 
-- `GregCorridorKeyFlame-0.3.0.pkg`
+- `GregCorridorKeyFlame-0.3.1.pkg`
   - Installs the Flame Python hook, Matchbox package, and setup helpers.
   - Automatically opens Terminal to install or update EZ-CorridorKey as the logged-in user.
-- `GregCorridorKeyFlame-Uninstall-0.3.0.pkg`
+- `GregCorridorKeyFlame-Uninstall-0.3.1.pkg`
   - Removes the Flame hook, Matchbox package, and installer support files.
   - Leaves `/Users/Shared/GregCorridorKey` intact so downloaded models and shot outputs are not accidentally deleted.
 - `README_GregCorridorKeyFlame.txt`
@@ -30,6 +30,19 @@ First public package for the Flame/EZ-CorridorKey integration.
 ## Flame Menu
 
 ![Flame right-click menu showing Greg CorridorKey](docs/images/flame-right-click-greg-corridorkey.png)
+
+## Matchbox Hookup After Import
+
+`Roundtrip Selected Clip` imports the EZ-CorridorKey outputs back into Flame, but this version does not automatically build a Batch FX setup or wire a Matchbox node.
+
+After import, add `GregCorridorKey.mx` and connect:
+
+- `CorridorKey_FG` -> Matchbox input 1, `Corridor FG`
+- `CorridorKey_Matte` -> Matchbox input 2, `Corridor Matte`
+- Optional comp background -> Matchbox input 3, `Background`
+- Optional original source plate -> Matchbox input 4, `Original Plate`
+
+`CorridorKey_Comp` is mainly a quick preview. `CorridorKey_Processed` is useful as a standalone result or comparison, but FG + Matte gives more control in the Matchbox.
 
 ## Credits
 
