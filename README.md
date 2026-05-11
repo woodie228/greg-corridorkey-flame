@@ -37,6 +37,16 @@ The packages are currently unsigned. If macOS blocks a normal double-click, righ
 
 The first setup can take a while because EZ-CorridorKey downloads Python packages and model weights.
 
+## Using It In Flame
+
+After installation, right-click a timeline clip or segment in Flame. The menu should include `Greg CorridorKey`.
+
+![Flame right-click menu showing Greg CorridorKey](docs/images/flame-right-click-greg-corridorkey.png)
+
+Choose `Greg CorridorKey / Roundtrip Selected Clip` to export the selected shot, run the EZ-CorridorKey ML pass, and import the generated outputs back into Flame.
+
+Processing speed depends heavily on the Mac. Faster Apple Silicon machines and more unified memory will finish the ML key sooner; slower or lower-memory Macs can take significantly longer, especially on high-resolution or long shots.
+
 ## Installed Files
 
 - `/opt/Autodesk/shared/python/greg_corridor_key_roundtrip.py`

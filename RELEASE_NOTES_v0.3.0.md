@@ -24,6 +24,12 @@ First public package for the Flame/EZ-CorridorKey integration.
 - Packages are unsigned.
 - First install can take a while because EZ-CorridorKey downloads Python packages and model weights.
 - Users should restart Flame or run `Rescan Python Hooks` after setup completes.
+- After installation, `Greg CorridorKey` appears in Flame's right-click menu on supported timeline clips/segments.
+- ML key processing time depends on Mac speed, Apple Silicon generation, available unified memory, shot length, and resolution.
+
+## Flame Menu
+
+![Flame right-click menu showing Greg CorridorKey](docs/images/flame-right-click-greg-corridorkey.png)
 
 ## Credits
 
