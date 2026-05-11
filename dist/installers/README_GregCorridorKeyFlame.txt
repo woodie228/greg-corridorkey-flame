@@ -22,15 +22,15 @@ Intel Macs, Windows, Linux, and Flame versions older than 2023 are not supported
 
 Use the GitHub Release assets for normal installation:
 
-- `GregCorridorKeyFlame-0.3.0.pkg`
-- `GregCorridorKeyFlame-Uninstall-0.3.0.pkg`
+- `GregCorridorKeyFlame-0.3.3.pkg`
+- `GregCorridorKeyFlame-Uninstall-0.3.3.pkg`
 
 The packages are currently unsigned. If macOS blocks a normal double-click, right-click the package and choose `Open`.
 
 ## Install Flow
 
 1. Quit Flame.
-2. Run `GregCorridorKeyFlame-0.3.0.pkg`.
+2. Run `GregCorridorKeyFlame-0.3.3.pkg`.
 3. The installer copies the Flame hook and Matchbox.
 4. Terminal opens automatically and installs or updates EZ-CorridorKey as the logged-in user.
 5. When Terminal finishes, open Flame and run `Rescan Python Hooks`, or restart Flame.
