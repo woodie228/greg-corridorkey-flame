@@ -1,15 +1,16 @@
-# Greg CorridorKey Flame Tools v0.3.2
+# Greg CorridorKey Flame Tools v0.3.3
 
-Installer update for the Flame/EZ-CorridorKey integration package. This release auto-downloads the commonly needed optional model set so Flame users are less likely to hit missing-weight errors.
+Uninstaller clarity update for the Flame/EZ-CorridorKey integration package.
 
 ## Included Assets
 
-- `GregCorridorKeyFlame-0.3.2.pkg`
+- `GregCorridorKeyFlame-0.3.3.pkg`
   - Installs the Flame Python hook, Matchbox package, and setup helpers.
   - Automatically opens Terminal to install or update EZ-CorridorKey as the logged-in user.
-- `GregCorridorKeyFlame-Uninstall-0.3.2.pkg`
+- `GregCorridorKeyFlame-Uninstall-0.3.3.pkg`
   - Removes the Flame hook, Matchbox package, and installer support files.
   - Leaves `/Users/Shared/GregCorridorKey` intact so downloaded models and shot outputs are not accidentally deleted.
+  - Opens Terminal with a clear uninstall summary because macOS Installer's final wording is generic and can sound like a normal install.
 - `README_GregCorridorKeyFlame.txt`
   - Short install notes for end users.
 
@@ -25,6 +26,7 @@ Installer update for the Flame/EZ-CorridorKey integration package. This release 
 - First install can take a while because EZ-CorridorKey downloads Python packages and model weights.
 - The installer now downloads the commonly needed optional model set by default: CorridorKey Blue, MLX weights, BiRefNet, MatAnyone2, SAM2 Base+, GVM, and VideoMaMa.
 - GVM is about 6 GB and VideoMaMa is about 37 GB, so first install time and disk usage can be substantial.
+- The uninstall package writes `/Users/Shared/GregCorridorKey/greg_corridorkey_uninstall.log` and opens Terminal with a clear removal message.
 - Users should restart Flame or run `Rescan Python Hooks` after setup completes.
 - After installation, `Greg CorridorKey` appears in Flame's right-click menu on supported timeline clips/segments.
 - ML key processing time depends on Mac speed, Apple Silicon generation, available unified memory, shot length, and resolution.

@@ -3,8 +3,12 @@ set -euo pipefail
 
 APP_ROOT="/Library/Application Support/Greg/CorridorKeyFlame"
 HOOK_DST="/opt/Autodesk/shared/python/greg_corridor_key_roundtrip.py"
+SHARED_ROOT="/Users/Shared/GregCorridorKey"
+UNINSTALL_LOG="$SHARED_ROOT/greg_corridorkey_uninstall.log"
+UNINSTALL_RUNNER="$SHARED_ROOT/greg_corridorkey_uninstall_summary.command"
 
 rm -f "$HOOK_DST"
+rm -f /opt/Autodesk/shared/python/__pycache__/greg_corridor_key_roundtrip*.pyc
 
 if [ -d "/opt/Autodesk/user" ]; then
     for user_dir in /opt/Autodesk/user/*_20[0-9][0-9]; do
@@ -15,8 +19,15 @@ fi
 
 rm -rf "$APP_ROOT"
 
-cat <<EOF
+mkdir -p "$SHARED_ROOT"
+cat > "$UNINSTALL_LOG" <<EOF
 Greg CorridorKey Flame tools removed.
+
+Removed:
+- $HOOK_DST
+- /opt/Autodesk/shared/python/__pycache__/greg_corridor_key_roundtrip*.pyc
+- /opt/Autodesk/user/*/matchbox/shaders/MACHINE_LEARNING/GregCorridorKey.mx
+- $APP_ROOT
 
 Left in place on purpose:
 /Users/Shared/GregCorridorKey
@@ -24,5 +35,29 @@ Left in place on purpose:
 That folder may contain CorridorKey models, dependencies, and rendered shot output.
 Delete it manually only if you are sure you no longer need it.
 EOF
+cat "$UNINSTALL_LOG"
+
+console_user="$(stat -f %Su /dev/console 2>/dev/null || true)"
+if [ -z "$console_user" ] || [ "$console_user" = "root" ]; then
+    console_user="${SUDO_USER:-}"
+fi
+
+cat > "$UNINSTALL_RUNNER" <<EOF
+#!/bin/bash
+clear
+cat "$UNINSTALL_LOG"
+echo
+echo "The macOS Installer app may say the uninstall package was installed successfully."
+echo "That means the uninstall script finished."
+echo
+read -n 1 -s -r -p "Press any key to close this window..."
+EOF
+chmod 0755 "$UNINSTALL_RUNNER"
+
+if [ -n "$console_user" ] && id "$console_user" >/dev/null 2>&1; then
+    chown "$console_user":staff "$UNINSTALL_RUNNER" "$UNINSTALL_LOG" || true
+    uid="$(id -u "$console_user")"
+    launchctl asuser "$uid" sudo -u "$console_user" open -a Terminal "$UNINSTALL_RUNNER" || true
+fi
 
 exit 0

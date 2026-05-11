@@ -90,9 +90,13 @@ Setup logs are written to:
 
 ## Uninstall
 
-Run `GregCorridorKeyFlame-Uninstall-0.3.0.pkg`.
+Run `GregCorridorKeyFlame-Uninstall-0.3.3.pkg`.
 
-The uninstaller removes the Flame hook, Matchbox package, and installer support files. It intentionally leaves `/Users/Shared/GregCorridorKey` in place because that folder may contain large downloaded models and shot output.
+The uninstaller removes the Flame hook, Matchbox package, compiled hook cache, and installer support files. It intentionally leaves `/Users/Shared/GregCorridorKey` in place because that folder may contain large downloaded models and shot output.
+
+macOS Installer may still show a generic success message that sounds like an install completed. The uninstall package also opens Terminal with a clear removal summary and writes:
+
+`/Users/Shared/GregCorridorKey/greg_corridorkey_uninstall.log`
 
 ## Notes
 
