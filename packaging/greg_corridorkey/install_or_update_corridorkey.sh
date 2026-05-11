@@ -39,17 +39,24 @@ cd "$TARGET"
 
 echo "[2/4] Running EZ-CorridorKey installer..."
 chmod +x ./1-install.sh
-CORRIDORKEY_INSTALL_SAM2="${CORRIDORKEY_INSTALL_SAM2:-n}" \
-CORRIDORKEY_PREDOWNLOAD_SAM2="${CORRIDORKEY_PREDOWNLOAD_SAM2:-n}" \
+CORRIDORKEY_INSTALL_SAM2="${CORRIDORKEY_INSTALL_SAM2:-y}" \
+CORRIDORKEY_PREDOWNLOAD_SAM2="${CORRIDORKEY_PREDOWNLOAD_SAM2:-y}" \
 CORRIDORKEY_INSTALL_FFMPEG="${CORRIDORKEY_INSTALL_FFMPEG:-n}" \
-CORRIDORKEY_INSTALL_GVM="${CORRIDORKEY_INSTALL_GVM:-n}" \
-CORRIDORKEY_INSTALL_VIDEOMAMA="${CORRIDORKEY_INSTALL_VIDEOMAMA:-n}" \
+CORRIDORKEY_INSTALL_GVM="${CORRIDORKEY_INSTALL_GVM:-y}" \
+CORRIDORKEY_INSTALL_VIDEOMAMA="${CORRIDORKEY_INSTALL_VIDEOMAMA:-y}" \
 CORRIDORKEY_CREATE_SHORTCUT="${CORRIDORKEY_CREATE_SHORTCUT:-n}" \
 ./1-install.sh
 
-echo "[3/4] Downloading BiRefNet Matting for Flame alpha hints..."
+echo "[3/4] Downloading optional model weights for Flame users..."
 if [ -f ".venv/bin/python" ] && [ -f "scripts/setup_models.py" ]; then
-    .venv/bin/python scripts/setup_models.py --birefnet || true
+    .venv/bin/python scripts/setup_models.py \
+        --corridorkey-blue \
+        --corridorkey-mlx \
+        --birefnet \
+        --matanyone2 \
+        --sam2 base-plus \
+        --gvm \
+        --videomama || true
 fi
 
 echo "[4/4] Writing Greg Flame config..."

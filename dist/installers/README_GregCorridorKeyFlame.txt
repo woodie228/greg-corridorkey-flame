@@ -37,6 +37,8 @@ The packages are currently unsigned. If macOS blocks a normal double-click, righ
 
 The first setup can take a while because EZ-CorridorKey downloads Python packages and model weights.
 
+This package now installs the commonly needed EZ-CorridorKey model set automatically, including CorridorKey Blue, MLX weights for Apple Silicon, BiRefNet, MatAnyone2, SAM2 Base+, GVM, and VideoMaMa. Some of these are large: GVM is about 6 GB and VideoMaMa is about 37 GB. First install time depends heavily on internet speed, disk speed, and available space.
+
 ## Using It In Flame
 
 After installation, right-click a timeline clip or segment in Flame. The menu should include `Greg CorridorKey`.
