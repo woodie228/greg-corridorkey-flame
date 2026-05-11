@@ -1,0 +1,70 @@
+<ShaderNodePreset SupportsAdaptiveDegradation="False" SupportsAction="False" SupportsTransition="False" SupportsTimeline="False" TimelineUseBack="False" MatteProvider="True" CommercialUsePermitted="True" ShaderType="Matchbox" SoftwareVersion="2017.0.0" LimitInputsToTexture="True" Version="2" Description="Flame companion for CorridorKey FG and Matte passes. Assemble, shape, despill, and QC the generated key." Name="Greg Corridor Key">
+   <Shader Clear="0" GridSubdivision="1" OutputBitDepth="Output" Index="1">
+      <Uniform Max="5" Min="0" Default="0" Inc="1" Tooltip="Choose the output view." Row="0" Col="0" Page="0" Type="int" ChannelName="Output Mode" DisplayName="Output Mode" Name="output_mode" ValueType="Popup">
+         <PopupEntry Title="Composite" Value="0">
+         </PopupEntry>
+         <PopupEntry Title="RGBA Key" Value="1">
+         </PopupEntry>
+         <PopupEntry Title="FG Only" Value="2">
+         </PopupEntry>
+         <PopupEntry Title="Matte" Value="3">
+         </PopupEntry>
+         <PopupEntry Title="Edge QC" Value="4">
+         </PopupEntry>
+         <PopupEntry Title="Spill QC" Value="5">
+         </PopupEntry>
+      </Uniform>
+      <Uniform Max="4" Min="0" Default="0" Inc="1" Tooltip="Channel to read from the CorridorKey Matte input." Row="1" Col="0" Page="0" Type="int" ChannelName="Matte Channel" DisplayName="Matte Channel" Name="matte_channel" ValueType="Popup">
+         <PopupEntry Title="Alpha" Value="0">
+         </PopupEntry>
+         <PopupEntry Title="Red" Value="1">
+         </PopupEntry>
+         <PopupEntry Title="Green" Value="2">
+         </PopupEntry>
+         <PopupEntry Title="Blue" Value="3">
+         </PopupEntry>
+         <PopupEntry Title="Luminance" Value="4">
+         </PopupEntry>
+      </Uniform>
+      <Uniform Row="2" Col="0" Page="0" Default="False" Tooltip="Invert the selected matte channel." Type="bool" ChannelName="Invert Matte" DisplayName="Invert Matte" Name="invert_matte">
+      </Uniform>
+      <Uniform ResDependent="None" Max="1.0" Min="0.0" Default="0.0" Inc="0.002" Tooltip="Lift the matte black point." Row="3" Col="0" Page="0" Type="float" ChannelName="Matte Black" DisplayName="Matte Black" Name="matte_black">
+      </Uniform>
+      <Uniform ResDependent="None" Max="1.0" Min="0.0" Default="1.0" Inc="0.002" Tooltip="Set the matte white point." Row="4" Col="0" Page="0" Type="float" ChannelName="Matte White" DisplayName="Matte White" Name="matte_white">
+      </Uniform>
+      <Uniform ResDependent="None" Max="4.0" Min="0.1" Default="1.0" Inc="0.01" Tooltip="Gamma-shape the matte after black/white point adjustment." Row="5" Col="0" Page="0" Type="float" ChannelName="Matte Gamma" DisplayName="Matte Gamma" Name="matte_gamma">
+      </Uniform>
+      <Uniform ResDependent="None" Max="16.0" Min="0.0" Default="0.0" Inc="0.1" Tooltip="Soften the matte in pixels." Row="0" Col="1" Page="0" Type="float" ChannelName="Matte Blur" DisplayName="Matte Blur" Name="matte_blur">
+      </Uniform>
+      <Uniform ResDependent="None" Max="16.0" Min="-16.0" Default="0.0" Inc="0.1" Tooltip="Positive values choke the matte; negative values grow it." Row="1" Col="1" Page="0" Type="float" ChannelName="Matte Choke" DisplayName="Matte Choke" Name="matte_choke">
+      </Uniform>
+      <Uniform ResDependent="None" Max="1.0" Min="0.0" Default="0.0" Inc="0.01" Tooltip="Reduce green spill using the original plate input as a guide." Row="2" Col="1" Page="0" Type="float" ChannelName="Despill" DisplayName="Despill" Name="despill_strength">
+      </Uniform>
+      <Uniform ResDependent="None" Max="1.0" Min="0.0" Default="0.25" Inc="0.01" Tooltip="Restore some magenta/blue edge energy after despill." Row="3" Col="1" Page="0" Type="float" ChannelName="Edge Restore" DisplayName="Edge Restore" Name="edge_restore">
+      </Uniform>
+      <Uniform Row="4" Col="1" Page="0" Default="False" Tooltip="Convert CorridorKey FG from display/sRGB gamma to linear before combining." Type="bool" ChannelName="FG sRGB to Linear" DisplayName="FG sRGB to Linear" Name="fg_srgb_to_linear">
+      </Uniform>
+      <Uniform Row="5" Col="1" Page="0" Default="True" Tooltip="When Output Mode is RGBA Key, output premultiplied RGB instead of straight RGB." Type="bool" ChannelName="Premultiply RGBA" DisplayName="Premultiply RGBA" Name="premultiply_output">
+      </Uniform>
+      <Uniform ResDependent="None" Max="1.0" Min="0.0" Default="1.0" Inc="0.01" Tooltip="Blend premultiplied foreground over the Background input in Composite mode." Row="0" Col="2" Page="0" Type="float" ChannelName="BG Mix" DisplayName="BG Mix" Name="bg_mix">
+      </Uniform>
+      <Uniform ResDependent="None" Max="1.0" Min="0.0" Default="1.0" Inc="0.01" Tooltip="Blend between the unprocessed FG input and this Matchbox result." Row="1" Col="2" Page="0" Type="float" ChannelName="Mix" DisplayName="Mix" Name="mix_amount">
+      </Uniform>
+      <Uniform Index="0" NoInput="Error" Tooltip="CorridorKey FG pass, preferably the straight foreground color output." DisplayName="Corridor FG" InputColor="67, 77, 83" Mipmaps="False" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR" Type="sampler2D" Name="fg_input">
+      </Uniform>
+      <Uniform Index="1" NoInput="Error" Tooltip="CorridorKey Matte pass." DisplayName="Corridor Matte" InputColor="83, 73, 67" Mipmaps="False" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR" Type="sampler2D" Name="matte_input">
+      </Uniform>
+      <Uniform Index="2" NoInput="Black" Tooltip="Optional background for Composite mode." DisplayName="Background" InputColor="60, 80, 67" Mipmaps="False" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR" Type="sampler2D" Name="bg_input">
+      </Uniform>
+      <Uniform Index="3" NoInput="Black" Tooltip="Original green-screen plate, used only as a despill guide." DisplayName="Original Plate" InputColor="77, 67, 83" Mipmaps="False" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR" Type="sampler2D" Name="plate_input">
+      </Uniform>
+   </Shader>
+   <Page Name="Greg Corridor Key" Page="0">
+      <Col Name="Matte" Col="0" Page="0">
+      </Col>
+      <Col Name="Edges" Col="1" Page="0">
+      </Col>
+      <Col Name="Output" Col="2" Page="0">
+      </Col>
+   </Page>
+</ShaderNodePreset>

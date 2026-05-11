@@ -1,0 +1,123 @@
+#!/bin/bash
+set -euo pipefail
+
+APP_ROOT="/Library/Application Support/Greg/CorridorKeyFlame"
+SHARED_ROOT="/Users/Shared/GregCorridorKey"
+CONFIG_DIR="$SHARED_ROOT/config"
+CONFIG_FILE="$CONFIG_DIR/corridorkey_root.txt"
+HOOK_SRC="$APP_ROOT/greg_corridor_key_roundtrip.py"
+HOOK_DST="/opt/Autodesk/shared/python/greg_corridor_key_roundtrip.py"
+MATCHBOX_SRC="$APP_ROOT/GregCorridorKey.mx"
+HELPER="$APP_ROOT/install_or_update_corridorkey.sh"
+SETUP_LOG="$SHARED_ROOT/greg_corridorkey_ez_setup.log"
+SETUP_RUNNER="$SHARED_ROOT/run_ez_corridorkey_setup.command"
+
+if [ "$(uname -s)" != "Darwin" ]; then
+    echo "Greg CorridorKey Flame tools require macOS."
+    exit 1
+fi
+
+if [ "$(uname -m)" != "arm64" ]; then
+    echo "Greg CorridorKey Flame tools are packaged for Apple Silicon Macs."
+    echo "Install cancelled on architecture: $(uname -m)"
+    exit 1
+fi
+
+mkdir -p "/opt/Autodesk/shared/python" "$CONFIG_DIR"
+cp "$HOOK_SRC" "$HOOK_DST"
+chmod 0644 "$HOOK_DST"
+
+console_user="$(stat -f %Su /dev/console 2>/dev/null || true)"
+if [ -z "$console_user" ] || [ "$console_user" = "root" ]; then
+    console_user="${SUDO_USER:-}"
+fi
+
+default_root="$SHARED_ROOT/EZ-CorridorKey"
+downloads_root=""
+if [ -n "$console_user" ] && [ -d "/Users/$console_user/Downloads/EZ-CorridorKey" ]; then
+    downloads_root="/Users/$console_user/Downloads/EZ-CorridorKey"
+fi
+
+if [ -d "$default_root" ]; then
+    printf "%s\n" "$default_root" > "$CONFIG_FILE"
+elif [ -n "$downloads_root" ]; then
+    printf "%s\n" "$downloads_root" > "$CONFIG_FILE"
+else
+    printf "%s\n" "$default_root" > "$CONFIG_FILE"
+fi
+
+if [ -n "$console_user" ] && id "$console_user" >/dev/null 2>&1; then
+    chown -R "$console_user":staff "$SHARED_ROOT" || true
+fi
+chmod -R u+rwX,go+rX "$SHARED_ROOT"
+
+installed_matchbox_count=0
+if [ -d "/opt/Autodesk/user" ]; then
+    for user_dir in /opt/Autodesk/user/*_20[2-9][0-9]; do
+        [ -d "$user_dir" ] || continue
+        year="${user_dir##*_}"
+        if [ "$year" -lt 2023 ]; then
+            continue
+        fi
+        matchbox_dir="$user_dir/matchbox/shaders/MACHINE_LEARNING"
+        mkdir -p "$matchbox_dir"
+        cp "$MATCHBOX_SRC" "$matchbox_dir/GregCorridorKey.mx"
+        chmod 0644 "$matchbox_dir/GregCorridorKey.mx"
+        installed_matchbox_count=$((installed_matchbox_count + 1))
+    done
+fi
+
+cat > "$APP_ROOT/INSTALL_SUMMARY.txt" <<EOF
+Greg CorridorKey Flame tools installed.
+
+Hook:
+$HOOK_DST
+
+CorridorKey root config:
+$CONFIG_FILE
+$(cat "$CONFIG_FILE")
+
+Matchbox installs:
+$installed_matchbox_count Flame user folder(s)
+
+EZ-CorridorKey setup:
+The installer automatically opens Terminal and runs:
+$HELPER
+
+Setup log:
+$SETUP_LOG
+
+Then in Flame, run Rescan Python Hooks or restart Flame.
+EOF
+
+cat > "$SETUP_RUNNER" <<EOF
+#!/bin/bash
+clear
+echo "Greg CorridorKey Flame setup"
+echo
+echo "Installing or updating EZ-CorridorKey. This can take a while the first time."
+echo "Log: $SETUP_LOG"
+echo
+"$HELPER" 2>&1 | tee "$SETUP_LOG"
+status=\${PIPESTATUS[0]}
+echo
+if [ \$status -eq 0 ]; then
+    echo "EZ-CorridorKey setup complete."
+    echo "Restart Flame or run Rescan Python Hooks."
+else
+    echo "EZ-CorridorKey setup failed with status \$status."
+    echo "Send this log to Ryan/Greg:"
+    echo "$SETUP_LOG"
+fi
+echo
+read -n 1 -s -r -p "Press any key to close this window..."
+EOF
+chmod 0755 "$SETUP_RUNNER"
+
+if [ -n "$console_user" ] && id "$console_user" >/dev/null 2>&1; then
+    chown "$console_user":staff "$SETUP_RUNNER" || true
+    uid="$(id -u "$console_user")"
+    launchctl asuser "$uid" sudo -u "$console_user" open -a Terminal "$SETUP_RUNNER" || true
+fi
+
+exit 0

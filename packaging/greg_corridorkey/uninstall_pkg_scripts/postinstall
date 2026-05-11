@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+APP_ROOT="/Library/Application Support/Greg/CorridorKeyFlame"
+HOOK_DST="/opt/Autodesk/shared/python/greg_corridor_key_roundtrip.py"
+
+rm -f "$HOOK_DST"
+
+if [ -d "/opt/Autodesk/user" ]; then
+    for user_dir in /opt/Autodesk/user/*_20[0-9][0-9]; do
+        [ -d "$user_dir" ] || continue
+        rm -f "$user_dir/matchbox/shaders/MACHINE_LEARNING/GregCorridorKey.mx"
+    done
+fi
+
+rm -rf "$APP_ROOT"
+
+cat <<EOF
+Greg CorridorKey Flame tools removed.
+
+Left in place on purpose:
+/Users/Shared/GregCorridorKey
+
+That folder may contain CorridorKey models, dependencies, and rendered shot output.
+Delete it manually only if you are sure you no longer need it.
+EOF
+
+exit 0
