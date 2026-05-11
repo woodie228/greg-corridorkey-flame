@@ -57,3 +57,14 @@ The uninstaller removes the Flame hook, Matchbox package, and installer support 
 ## Notes
 
 This is a Flame integration wrapper around EZ-CorridorKey. EZ-CorridorKey and CorridorKey have their own licensing and model terms. Review the upstream project before redistribution or commercial use.
+
+## Credits
+
+- **CorridorKey**: Created by [Niko Pueringer](https://github.com/nikopueringer) / Corridor Digital, the team behind Corridor Crew. This installer exists because of their original AI chroma keyer work.
+- **EZ-CorridorKey**: GUI, workflow, sound, QA, and maintenance by [Ed Zisk](https://www.edzisk.com) / [EZSCAPE](https://www.ezscape.space). The Flame installer downloads and drives EZ-CorridorKey for Apple Silicon Mac support.
+- **Greg CorridorKey Flame Tools**: Flame hook, Matchbox companion, and installer packaging by Ryan Wood / Greg.
+
+Please star and support the upstream projects:
+
+- [CorridorKey](https://github.com/nikopueringer/CorridorKey)
+- [EZ-CorridorKey](https://github.com/edenaion/EZ-CorridorKey)

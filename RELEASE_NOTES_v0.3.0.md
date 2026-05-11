@@ -24,3 +24,14 @@ First public package for the Flame/EZ-CorridorKey integration.
 - Packages are unsigned.
 - First install can take a while because EZ-CorridorKey downloads Python packages and model weights.
 - Users should restart Flame or run `Rescan Python Hooks` after setup completes.
+
+## Credits
+
+- **CorridorKey** was created by [Niko Pueringer](https://github.com/nikopueringer) / Corridor Digital, the team behind Corridor Crew. This Flame installer builds on their original AI chroma keyer.
+- **EZ-CorridorKey** is maintained by [Ed Zisk](https://www.edzisk.com) / [EZSCAPE](https://www.ezscape.space), who created the GUI/workflow layer and Apple Silicon-friendly install path used here.
+- **Greg CorridorKey Flame Tools** packages the Flame hook, Matchbox companion, and macOS installer workflow for Autodesk Flame users.
+
+Please support the upstream projects:
+
+- [CorridorKey](https://github.com/nikopueringer/CorridorKey)
+- [EZ-CorridorKey](https://github.com/edenaion/EZ-CorridorKey)
