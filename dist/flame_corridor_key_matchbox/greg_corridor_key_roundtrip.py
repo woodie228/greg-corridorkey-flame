@@ -454,6 +454,31 @@ def _first_image_file(path):
     return None
 
 
+def _image_sequence_path(path):
+    files = _image_files(path)
+    if not files:
+        return None
+
+    sequence_re = re.compile(r"^(?P<prefix>.*?)(?P<frame>\d+)(?P<suffix>\.[^.]+)$")
+    groups = {}
+    for file_path in files:
+        name = os.path.basename(file_path)
+        match = sequence_re.match(name)
+        if not match:
+            continue
+        key = (match.group("prefix"), match.group("suffix"), len(match.group("frame")))
+        groups.setdefault(key, []).append(int(match.group("frame")))
+
+    if not groups:
+        return files[0]
+
+    prefix, suffix, padding = max(groups, key=lambda key: len(groups[key]))
+    frames = sorted(groups[(prefix, suffix, padding)])
+    first = str(frames[0]).zfill(padding)
+    last = str(frames[-1]).zfill(padding)
+    return os.path.join(path, "%s[%s-%s]%s" % (prefix, first, last, suffix))
+
+
 def _run_birefnet_alpha_hint(shot_root):
     script = (
         "import os, sys\n"
@@ -631,7 +656,7 @@ def _import_output_dir(path, output_name):
     if not os.path.isdir(path):
         return None
 
-    import_path = _first_image_file(path) or path
+    import_path = _image_sequence_path(path) or path
     destination = None
     try:
         destination = _corridorkey_import_destination()
@@ -738,7 +763,7 @@ def _write_bfx_status_report(clip, output_root, imported):
 
     for output_name in IMPORT_OUTPUTS:
         output_dir = os.path.join(output_root, output_name)
-        report.append("%s first frame: %s" % (output_name, _first_image_file(output_dir) or "missing"))
+        report.append("%s import path: %s" % (output_name, _image_sequence_path(output_dir) or "missing"))
         report.append("%s imported object: %r" % (output_name, imported.get(output_name)))
 
     if isinstance(clip, flame.PySegment):

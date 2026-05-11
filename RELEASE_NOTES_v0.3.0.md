@@ -1,13 +1,13 @@
-# Greg CorridorKey Flame Tools v0.3.3
+# Greg CorridorKey Flame Tools v0.3.4
 
-Uninstaller clarity update for the Flame/EZ-CorridorKey integration package.
+Sequence import and Matchbox matte default update for the Flame/EZ-CorridorKey integration package.
 
 ## Included Assets
 
-- `GregCorridorKeyFlame-0.3.3.pkg`
+- `GregCorridorKeyFlame-0.3.4.pkg`
   - Installs the Flame Python hook, Matchbox package, and setup helpers.
   - Automatically opens Terminal to install or update EZ-CorridorKey as the logged-in user.
-- `GregCorridorKeyFlame-Uninstall-0.3.3.pkg`
+- `GregCorridorKeyFlame-Uninstall-0.3.4.pkg`
   - Removes the Flame hook, Matchbox package, and installer support files.
   - Leaves `/Users/Shared/GregCorridorKey` intact so downloaded models and shot outputs are not accidentally deleted.
   - Opens Terminal with a clear uninstall summary because macOS Installer's final wording is generic and can sound like a normal install.
@@ -22,6 +22,8 @@ Uninstaller clarity update for the Flame/EZ-CorridorKey integration package.
 
 ## Important Notes
 
+- v0.3.4 fixes roundtrip import so numbered EXR/PNG output folders import as full image sequences instead of one still frame.
+- v0.3.4 rebuilds the Matchbox with the default Matte Channel set to Luminance so EZ-CorridorKey image mattes affect the result immediately.
 - Packages are unsigned.
 - First install can take a while because EZ-CorridorKey downloads Python packages and model weights.
 - The installer now downloads the commonly needed optional model set by default: CorridorKey Blue, MLX weights, BiRefNet, MatAnyone2, SAM2 Base+, GVM, and VideoMaMa.

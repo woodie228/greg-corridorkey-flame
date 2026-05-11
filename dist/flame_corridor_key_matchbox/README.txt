@@ -11,7 +11,7 @@ Inputs:
    - /Processed can also be used for quick previews, but FG gives more control.
 2. Corridor Matte
    - CorridorKey /Matte output.
-   - Use Matte Channel if Flame reads the matte into red/luma instead of alpha.
+   - The Matchbox defaults to Luminance for EZ-CorridorKey image mattes. Change Matte Channel to Alpha only if your matte file has a real alpha channel.
 3. Background
    - Optional. Used by Composite output mode.
 4. Original Plate
@@ -51,7 +51,8 @@ Optional roundtrip automation:
 - In Flame, select a clip or sequence and choose:
   Greg CorridorKey / Roundtrip Selected Clip
 - The action exports an OpenEXR sequence, runs EZ-CorridorKey, and imports
-  `FG`, `Matte`, `Comp`, and `Processed` outputs back into Flame.
+  `FG`, `Matte`, `Comp`, and `Processed` outputs back into Flame as image
+  sequences when the generated frames use numbered filenames.
 - Current limitation: the action does not automatically create a Batch FX setup
   or wire those imported outputs into this Matchbox. Connect the imported
   outputs manually using the input notes above.

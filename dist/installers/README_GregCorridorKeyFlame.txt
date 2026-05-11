@@ -22,15 +22,15 @@ Intel Macs, Windows, Linux, and Flame versions older than 2023 are not supported
 
 Use the GitHub Release assets for normal installation:
 
-- `GregCorridorKeyFlame-0.3.3.pkg`
-- `GregCorridorKeyFlame-Uninstall-0.3.3.pkg`
+- `GregCorridorKeyFlame-0.3.4.pkg`
+- `GregCorridorKeyFlame-Uninstall-0.3.4.pkg`
 
 The packages are currently unsigned. If macOS blocks a normal double-click, right-click the package and choose `Open`.
 
 ## Install Flow
 
 1. Quit Flame.
-2. Run `GregCorridorKeyFlame-0.3.3.pkg`.
+2. Run `GregCorridorKeyFlame-0.3.4.pkg`.
 3. The installer copies the Flame hook and Matchbox.
 4. Terminal opens automatically and installs or updates EZ-CorridorKey as the logged-in user.
 5. When Terminal finishes, open Flame and run `Rescan Python Hooks`, or restart Flame.
@@ -60,7 +60,7 @@ Matchbox input order:
    - This is the foreground RGB pass and gives the Matchbox the most control.
 2. **Corridor Matte**
    - Connect the imported `CorridorKey_Matte` output.
-   - If the matte reads as luma/red instead of alpha, adjust the Matchbox `Matte Channel` control.
+   - The Matchbox defaults to reading the matte as luminance, which matches the generated image matte in most EZ-CorridorKey runs.
 3. **Background**
    - Optional.
    - Connect your comp background if you want the Matchbox `Composite` output mode.
@@ -90,7 +90,7 @@ Setup logs are written to:
 
 ## Uninstall
 
-Run `GregCorridorKeyFlame-Uninstall-0.3.3.pkg`.
+Run `GregCorridorKeyFlame-Uninstall-0.3.4.pkg`.
 
 The uninstaller removes the Flame hook, Matchbox package, compiled hook cache, and installer support files. It intentionally leaves `/Users/Shared/GregCorridorKey` in place because that folder may contain large downloaded models and shot output.
 
