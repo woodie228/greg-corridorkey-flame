@@ -22,6 +22,9 @@ uniform float despill_strength;
 uniform float edge_restore;
 uniform float bg_mix;
 uniform float mix_amount;
+uniform float transform_x;
+uniform float transform_y;
+uniform float transform_scale;
 
 float saturate(float value)
 {
@@ -36,6 +39,23 @@ vec3 saturate(vec3 value)
 vec4 sample_clamped(sampler2D tex, vec2 uv)
 {
     return texture2D(tex, clamp(uv, vec2(0.0), vec2(1.0)));
+}
+
+vec4 sample_black(sampler2D tex, vec2 uv)
+{
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+        return vec4(0.0);
+    }
+    return texture2D(tex, uv);
+}
+
+vec2 transformed_uv(vec2 uv)
+{
+    vec2 resolution = vec2(max(adsk_result_w, 1.0), max(adsk_result_h, 1.0));
+    vec2 offset = vec2(transform_x, transform_y) / resolution;
+    vec2 center = vec2(0.5);
+    float scale = max(transform_scale, 0.001);
+    return ((uv - center - offset) / scale) + center;
 }
 
 float luminance(vec3 color)
@@ -153,24 +173,25 @@ void main()
 {
     vec2 resolution = vec2(max(adsk_result_w, 1.0), max(adsk_result_h, 1.0));
     vec2 uv = gl_FragCoord.xy / resolution;
+    vec2 fg_uv = transformed_uv(uv);
 
-    vec4 fg_sample = sample_clamped(fg_input, uv);
+    vec4 fg_sample = sample_black(fg_input, fg_uv);
     vec4 bg_sample = sample_clamped(bg_input, uv);
-    vec4 plate_sample = sample_clamped(plate_input, uv);
+    vec4 plate_sample = sample_black(plate_input, fg_uv);
 
     vec3 fg = fg_sample.rgb;
     if (fg_srgb_to_linear) {
         fg = srgb_to_linear(fg);
     }
 
-    float matte = adjusted_matte(uv);
+    float matte = adjusted_matte(fg_uv);
     vec3 keyed_fg = despill(fg, plate_sample.rgb, matte);
     vec3 premult_fg = keyed_fg * matte;
     vec3 composite = mix(premult_fg, keyed_fg * matte + bg_sample.rgb * (1.0 - matte), saturate(bg_mix));
 
     vec2 pixel = vec2(1.0 / max(adsk_result_w, 1.0), 1.0 / max(adsk_result_h, 1.0));
-    float edge_x = abs(adjusted_matte(uv + vec2(pixel.x, 0.0)) - adjusted_matte(uv - vec2(pixel.x, 0.0)));
-    float edge_y = abs(adjusted_matte(uv + vec2(0.0, pixel.y)) - adjusted_matte(uv - vec2(0.0, pixel.y)));
+    float edge_x = abs(adjusted_matte(fg_uv + vec2(pixel.x, 0.0)) - adjusted_matte(fg_uv - vec2(pixel.x, 0.0)));
+    float edge_y = abs(adjusted_matte(fg_uv + vec2(0.0, pixel.y)) - adjusted_matte(fg_uv - vec2(0.0, pixel.y)));
     float edge = saturate((edge_x + edge_y) * 4.0);
 
     vec4 result = vec4(composite, matte);

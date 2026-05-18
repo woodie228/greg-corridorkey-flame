@@ -35,13 +35,21 @@ Suggested Flame flow:
    - Optional comp background -> Matchbox input 3: Background
    - Optional original source plate -> Matchbox input 4: Original Plate
 5. Start with Output Mode = RGBA Key or Composite.
-6. Use Matte Black/White/Gamma, Matte Blur, Matte Choke, and Despill for final polish.
+6. Use X Position, Y Position, and Scale to place the keyed foreground over the background.
+7. Use Matte Black/White/Gamma, Matte Blur, Matte Choke, and Despill for final polish.
 
 Imported output notes:
 - CorridorKey_FG is the best Matchbox foreground input.
 - CorridorKey_Matte is the best Matchbox matte input.
 - CorridorKey_Comp is a quick preview from EZ-CorridorKey and normally does not need to be connected to the Matchbox.
 - CorridorKey_Processed is useful as a standalone RGBA-style result or comparison, but FG + Matte gives more manual control.
+
+Transform notes:
+- X Position and Y Position are measured in result pixels.
+- Positive X moves the keyed foreground right.
+- Positive Y moves the keyed foreground up.
+- Scale resizes the keyed foreground and matte together around frame center.
+- The Background input stays locked; only the Corridor FG, Corridor Matte, and Original Plate sampling move.
 
 Installed package name:
 - GregCorridorKey.mx

@@ -22,15 +22,15 @@ Intel Macs, Windows, Linux, and Flame versions older than 2023 are not supported
 
 Use the GitHub Release assets for normal installation:
 
-- `GregCorridorKeyFlame-0.3.4.pkg`
-- `GregCorridorKeyFlame-Uninstall-0.3.4.pkg`
+- `GregCorridorKeyFlame-0.3.5.pkg`
+- `GregCorridorKeyFlame-Uninstall-0.3.5.pkg`
 
 The packages are currently unsigned. If macOS blocks a normal double-click, right-click the package and choose `Open`.
 
 ## Install Flow
 
 1. Quit Flame.
-2. Run `GregCorridorKeyFlame-0.3.4.pkg`.
+2. Run `GregCorridorKeyFlame-0.3.5.pkg`.
 3. The installer copies the Flame hook and Matchbox.
 4. Terminal opens automatically and installs or updates EZ-CorridorKey as the logged-in user.
 5. When Terminal finishes, open Flame and run `Rescan Python Hooks`, or restart Flame.
@@ -77,6 +77,8 @@ Imported output notes:
 
 Suggested starting mode: set the Matchbox `Output Mode` to `RGBA Key` or `Composite`.
 
+Use `X Position`, `Y Position`, and `Scale` in the Matchbox to move and resize the keyed foreground after wiring the generated pieces. These transform the `Corridor FG`, `Corridor Matte`, and `Original Plate` sampling together while leaving the `Background` input locked.
+
 ## Installed Files
 
 - `/opt/Autodesk/shared/python/greg_corridor_key_roundtrip.py`
@@ -90,7 +92,7 @@ Setup logs are written to:
 
 ## Uninstall
 
-Run `GregCorridorKeyFlame-Uninstall-0.3.4.pkg`.
+Run `GregCorridorKeyFlame-Uninstall-0.3.5.pkg`.
 
 The uninstaller removes the Flame hook, Matchbox package, compiled hook cache, and installer support files. It intentionally leaves `/Users/Shared/GregCorridorKey` in place because that folder may contain large downloaded models and shot output.
 

@@ -50,6 +50,12 @@
       </Uniform>
       <Uniform ResDependent="None" Max="1.0" Min="0.0" Default="1.0" Inc="0.01" Tooltip="Blend between the unprocessed FG input and this Matchbox result." Row="1" Col="2" Page="0" Type="float" ChannelName="Mix" DisplayName="Mix" Name="mix_amount">
       </Uniform>
+      <Uniform ResDependent="None" Max="4096.0" Min="-4096.0" Default="0.0" Inc="1.0" Tooltip="Move the keyed foreground horizontally in result pixels. Positive values move right." Row="2" Col="2" Page="0" Type="float" ChannelName="X Position" DisplayName="X Position" Name="transform_x">
+      </Uniform>
+      <Uniform ResDependent="None" Max="4096.0" Min="-4096.0" Default="0.0" Inc="1.0" Tooltip="Move the keyed foreground vertically in result pixels. Positive values move up." Row="3" Col="2" Page="0" Type="float" ChannelName="Y Position" DisplayName="Y Position" Name="transform_y">
+      </Uniform>
+      <Uniform ResDependent="None" Max="10.0" Min="0.01" Default="1.0" Inc="0.01" Tooltip="Scale the keyed foreground around the frame center before compositing." Row="4" Col="2" Page="0" Type="float" ChannelName="Scale" DisplayName="Scale" Name="transform_scale">
+      </Uniform>
       <Uniform Index="0" NoInput="Error" Tooltip="CorridorKey FG pass, preferably the straight foreground color output." DisplayName="Corridor FG" InputColor="67, 77, 83" Mipmaps="False" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR" Type="sampler2D" Name="fg_input">
       </Uniform>
       <Uniform Index="1" NoInput="Error" Tooltip="CorridorKey Matte pass." DisplayName="Corridor Matte" InputColor="83, 73, 67" Mipmaps="False" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR" Type="sampler2D" Name="matte_input">
@@ -64,7 +70,7 @@
       </Col>
       <Col Name="Edges" Col="1" Page="0">
       </Col>
-      <Col Name="Output" Col="2" Page="0">
+      <Col Name="Output / Transform" Col="2" Page="0">
       </Col>
    </Page>
 </ShaderNodePreset>
