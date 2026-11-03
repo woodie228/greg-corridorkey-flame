@@ -159,7 +159,11 @@ Runtime settings confirmed 384 frames, window 4, stride 2 and stage-two batch on
 
 A 384-frame local review video was written at 24000/1001 fps and verified by
 reopening it. Source SHA256 was unchanged. Midpoint and final checker previews
-were inspected in addition to the excerpt samples. No footage, preview images,
+were inspected in addition to the excerpt samples. **The midpoint t4 matte
+incorrectly retains a rectangular patch of green screen behind the crowd.**
+This is a material visual defect despite all decoding/coverage checks passing;
+the output is not production approved. Its source (model decisions, temporal
+carry, conversion or runtime numerical behavior) is not yet established. No footage, preview images,
 outputs or identifying source metadata were uploaded. This verifies processing
 coverage over this approximately 16-second shot; it is not a ground-truth matte
 assessment, full playback quality approval, long-form stress test, or a native
