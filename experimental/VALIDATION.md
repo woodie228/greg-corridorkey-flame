@@ -102,10 +102,32 @@ python3 experimental/corridorkey2_mlx.py \
   --execute --acknowledge-model-terms
 ```
 
+## User-provided real moving footage — limited excerpt
+
+A subsequent authorized test used the first 24 consecutive frames of a
+user-provided 1920×1080 H.264 green-screen clip at 24000/1001 fps. The excerpt
+contains multiple people, arm movement and foreground/background subjects.
+A workspace-only derivative was explicitly resized to 1280×720 with INTER_AREA
+for the already downloaded t1 profile; the original file's SHA256 was unchanged
+before and after processing. No extra model profile was downloaded.
+
+Framewise FP32 inference completed with the patched isolated runtime. All 96
+pass images decoded as 1280×720 uint16. On every frame, Processed alpha exactly
+matched Matte and Processed RGB exactly matched FG; matte RGB channels matched.
+Inspected checker previews showed removal of the green screen while retaining
+the foreground player, crowd and barrier. A local review video was written at
+the source frame rate. Source footage, previews, outputs and identifying source
+metadata were not uploaded to this repository.
+
+This is a successful limited real-footage execution/output check, not a
+production approval: only 24 of 384 frames were tested, input was downsampled,
+no ground-truth matte was available, no quantitative temporal quality claim is
+made, and no native 1080p/t4/HDR or Flame import check was performed.
+
 ## Still unvalidated
 
 - M1 Ultra / M2 / M3 / M4 compatibility and memory requirements.
-- Real production footage and real subject motion, long clips, temporal t4 profiles, and blue-screen quality.
+- Full production-shot quality approval, long clips, temporal t4 profiles, and blue-screen quality.
 - Full-model agreement with official CUDA output, and effects of other M5 GPU operations.
 - Throughput and CPU projection overhead.
 - Flame import, source timing, Matchbox compositing, color transforms and premultiplication.
