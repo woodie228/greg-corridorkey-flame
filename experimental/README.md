@@ -13,7 +13,10 @@ The adapter accepts a display-referred sRGB RGB/RGBA PNG still or contiguous,
 equally zero-padded numeric PNG sequence. It uses FP32, chooses Hann 4/2 for
 four or more frames and 1/1 for shorter inputs, and refuses unsupported padded
 shapes. Published profile shapes are height × width 768×1280 and 1024×1536.
-There is no resizing. 1/1 loses temporal-window context.
+There is no resizing. 1/1 loses temporal-window context. Add `--framewise`
+to explicitly use t1 profiles for longer sequences; the adapter never silently
+falls back when a t4 profile is missing. RVM state is still carried between frames.
+The runtime settings are retained as `runtime-settings.json`.
 
 The current Flame roundtrip exports OpenEXR. Those exports **cannot be passed
 directly to this prototype**. This adapter does not convert EXR, ACEScg, log,
@@ -85,12 +88,13 @@ An interrupted process can leave scratch. Do not delete another run's files.
 python3 -m unittest discover -s tests -v
 ```
 
-Nine adapter tests pass using generated valid PNG fixtures and a simulated
+Ten adapter tests pass using generated valid PNG fixtures and a simulated
 runtime. These test invocation contracts, temporal selection, frame mapping,
 shape rejection, overwrite protection, license acknowledgement and failure
-cleanup. A separate authorized still-inference smoke test passed on M5 Ultra with the
+cleanup. Separate authorized still and six-frame translated-fixture inference tests passed
+on M5 Ultra with the
 patched runtime; see [VALIDATION.md](VALIDATION.md). Neither the unit tests nor
-the smoke test establish model parity, production matte quality, M1 compatibility,
+these smoke tests establish model parity, production matte quality, M1 compatibility,
 arbitrary resolution, HDR preservation, performance, or Flame import.
 
 Before publishing an installer or enabling this in the Flame right-click action:

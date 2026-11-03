@@ -56,7 +56,7 @@ def inspect_source(source):
     return source, files, info, profile
 
 
-def plan(source, runtime_python, model_root, destination):
+def plan(source, runtime_python, model_root, destination, *, framewise=False):
     source, files, info, profile = inspect_source(source)
     destination = Path(destination).resolve()
     if destination == source or source in destination.parents or destination in source.parents:
@@ -64,7 +64,7 @@ def plan(source, runtime_python, model_root, destination):
     if destination.exists():
         raise ValueError("Destination must be new; existing results are never replaced")
     height, width = profile
-    chunk, stride = (4, 2) if len(files) >= 4 else (1, 1)
+    chunk, stride = (4, 2) if len(files) >= 4 and not framewise else (1, 1)
     runtime_python = Path(runtime_python).absolute()
     if not runtime_python.is_file():
         raise ValueError("Runtime Python does not exist: %s" % runtime_python)
@@ -78,7 +78,9 @@ def plan(source, runtime_python, model_root, destination):
     return {"command": command, "source_frames": [p.name for p in files],
             "width": info[0], "height": info[1], "profile_hw": list(profile),
             "destination": str(destination), "color": "display-referred sRGB",
-            "experimental": True, "production_validated": False}
+            "experimental": True, "production_validated": False,
+            "temporal_window": chunk, "temporal_stride": stride,
+            "framewise_requested": framewise}
 
 
 def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
@@ -110,6 +112,8 @@ def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
                     raise ValueError("Processed output must contain RGBA")
         for upstream_name, flame_name in OUTPUTS.items():
             shutil.move(str(raw / upstream_name), str(destination / flame_name))
+        if (raw / "settings.json").is_file():
+            shutil.copyfile(raw / "settings.json", destination / "runtime-settings.json")
         receipt["status"] = "complete"
         receipt["inference_completed"] = True
         receipt["note"] = "Adapter structure checks passed; this does not establish image quality or Flame validation."
@@ -129,11 +133,13 @@ def main():
     parser.add_argument("--runtime-python", required=True, help="Python in a separate community MLX runtime environment")
     parser.add_argument("--model-root", required=True)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--framewise", action="store_true",
+                        help="Explicitly use only t1 profiles; keeps RVM recurrence but loses Hann window context")
     parser.add_argument("--execute", action="store_true", help="Default prints a plan only")
     parser.add_argument("--acknowledge-model-terms", action="store_true")
     args = parser.parse_args()
     try:
-        job = plan(args.input, args.runtime_python, args.model_root, args.output_dir)
+        job = plan(args.input, args.runtime_python, args.model_root, args.output_dir, framewise=args.framewise)
         if args.execute:
             run(job, acknowledge_model_terms=args.acknowledge_model_terms)
         print(json.dumps(job, indent=2))

@@ -26,7 +26,7 @@ Model terms remain separate and unchanged.
 
 ## Weight-free checks
 
-- Adapter: 9 tests passed, including preserving the venv Python symlink path.
+- Adapter: 10 tests passed, including preserving the venv Python symlink path.
 - Community unpatched source: 20/21 tests passed. Reconstruction parity failed.
 - Synthetic diagnostics localized errors to GPU FP32 matrix projection: up to
   0.0014 absolute projection error versus a float64 NumPy oracle. CPU projection
@@ -68,10 +68,44 @@ was nonconstant. The checker preview was visually inspected and showed the
 subject separated from the screen. This is a smoke check using a synthetic
 fixture, not a ground-truth accuracy assessment or model parity result.
 
+## Six-frame sequence using the same t1 profile
+
+An additional test used six translated copies of the 720p synthetic plate,
+shifting 6 pixels per frame (30 pixels total). No additional profiles were
+obtained. The explicit `--framewise` option selected Hann window/stride 1/1;
+RVM recurrence remains active in the community pipeline. This is not a t4
+Hann-window test and is not a substitute for production moving footage.
+
+All 24 outputs (six each of FG, Matte, Comp and Processed) fully decoded as
+1280×720 uint16 PNGs. For every frame:
+
+- Matte RGB channels were exactly equal.
+- Processed alpha was exactly equal to the separate Matte channel.
+- Processed RGB was exactly equal to FG, consistent with straight-alpha output.
+- Matte was nonconstant; output frame names/counts matched the ordered source.
+
+Alpha-weighted horizontal centroid moved from 563.19 to 593.03 pixels, consistent
+with the deliberate 30-pixel source translation. First/last checker previews
+were visually inspected. Runtime settings confirmed six frames, window/stride
+1/1 and stage-two batch one. Settings are now preserved alongside the adapter
+receipt, rather than discarded with scratch data. PNG sequence FPS in the
+runtime is 24 by default; this does not preserve source timing for Flame.
+
+To reproduce with an authorized supported PNG sequence and the existing profile:
+
+```bash
+python3 experimental/corridorkey2_mlx.py \
+  --input /path/to/numbered-png-frames \
+  --runtime-python /path/to/patched-runtime/.venv/bin/python \
+  --model-root /path/to/authorized-fp32-profiles \
+  --output-dir /path/to/new-results --framewise \
+  --execute --acknowledge-model-terms
+```
+
 ## Still unvalidated
 
 - M1 Ultra / M2 / M3 / M4 compatibility and memory requirements.
-- Real production footage, motion, long clips, temporal t4 profiles, and blue-screen quality.
+- Real production footage and real subject motion, long clips, temporal t4 profiles, and blue-screen quality.
 - Full-model agreement with official CUDA output, and effects of other M5 GPU operations.
 - Throughput and CPU projection overhead.
 - Flame import, source timing, Matchbox compositing, color transforms and premultiplication.

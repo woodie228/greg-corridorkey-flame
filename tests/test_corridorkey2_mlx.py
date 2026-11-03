@@ -53,6 +53,14 @@ class AdapterTests(unittest.TestCase):
         command = self.job()['command']
         self.assertEqual(command[command.index('--hann-chunk') + 1], '4')
 
+    def test_framewise_opt_in_retains_single_frame_profile_for_sequence(self):
+        for i in range(101, 106):
+            png(self.source / ("%04d.png" % i))
+        job = adapter.plan(self.source, sys.executable, self.models, self.root / "result", framewise=True)
+        self.assertEqual(job["temporal_window"], 1)
+        self.assertTrue(job["framewise_requested"])
+        self.assertEqual(len(job["source_frames"]), 6)
+
     def test_reject_gap_exr_and_unsupported_size(self):
         png(self.source / '0102.png')
         with self.assertRaisesRegex(ValueError, 'missing'):
@@ -83,6 +91,8 @@ class AdapterTests(unittest.TestCase):
         if '--check' in command:
             return
         raw = Path(command[command.index('--output-dir') + 1])
+        raw.mkdir(parents=True)
+        (raw / 'settings.json').write_text('{"window": 1}')
         for name in adapter.OUTPUTS:
             (raw / name).mkdir(parents=True)
             png(raw / name / '000000.png', color=6 if name == 'cutout' else 2)
@@ -90,7 +100,7 @@ class AdapterTests(unittest.TestCase):
     def test_contract_mapping_and_owned_scratch_cleanup(self):
         job = self.job()
         out = adapter.run(job, acknowledge_model_terms=True, runner=self.fake_runtime)
-        self.assertEqual(sorted(p.name for p in out.iterdir()), ['Comp', 'FG', 'Matte', 'Processed', 'experimental-run.json'])
+        self.assertEqual(sorted(p.name for p in out.iterdir()), ['Comp', 'FG', 'Matte', 'Processed', 'experimental-run.json', 'runtime-settings.json'])
         self.assertTrue((out / 'Processed/000000.png').exists())
         self.assertIn('complete', (out / 'experimental-run.json').read_text())
         self.assertTrue((self.source / '0100.png').exists())
