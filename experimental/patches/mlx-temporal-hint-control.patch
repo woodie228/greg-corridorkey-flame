@@ -1,0 +1,143 @@
+diff --git a/corridorkey_mlx/cli.py b/corridorkey_mlx/cli.py
+index c89eca9..c502db7 100644
+--- a/corridorkey_mlx/cli.py
++++ b/corridorkey_mlx/cli.py
+@@ -1,5 +1,6 @@
+ # Copyright 2026 Peter Teravskis
+ # SPDX-License-Identifier: Apache-2.0
++# Local modification for Greg CorridorKey Flame Tools: optional carried-hint control.
+ """Command-line inference for CorridorKey v2 MLX profiles."""
+ from __future__ import annotations
+ 
+@@ -51,6 +52,7 @@ def parser():
+     p.add_argument("--despill-strength", "--despill_strength", dest="despill_strength", type=strength, default=1.)
+     p.add_argument("--image-sequence", "--image_sequence", dest="image_sequence", action="store_true",
+                    help="Write lossless 16-bit PNGs instead of video")
++    p.add_argument("--no-carry-hint", action="store_true", help="Disable self-generated overlap hints; preserve explicit hints")
+     p.add_argument("--low-vram", "--low_vram", dest="low_vram", action="store_true")
+     p.add_argument("--compile", action="store_true", help="Compile MLX graphs for this shape")
+     p.add_argument("--kernel-mode", choices=["enabled", "reference"], default="enabled",
+@@ -177,7 +179,8 @@ def main(argv=None):
+                     run(model, source, args.output_dir, scratch, window=args.hann_chunk, stride=args.hann_stride,
+                         outputs=args.outputs, png=args.image_sequence, despill=args.despill_strength,
+                         screen=args.screen, first_hint=args.hint_first_frame,
+-                        hint_source=Source(args.hint_video) if args.hint_video else None, timings=timings)
++                        hint_source=Source(args.hint_video) if args.hint_video else None, timings=timings,
++                        carry_hint=not args.no_carry_hint)
+                 seconds = time.perf_counter() - started
+             row = {"seconds": seconds, "stage_seconds": timings,
+                    "peak_physical_bytes": memory.peak if memory else None}
+diff --git a/corridorkey_mlx/pipeline.py b/corridorkey_mlx/pipeline.py
+index fce3bc0..a99588d 100644
+--- a/corridorkey_mlx/pipeline.py
++++ b/corridorkey_mlx/pipeline.py
+@@ -1,5 +1,6 @@
+ # Copyright 2026 Peter Teravskis
+ # SPDX-License-Identifier: Apache-2.0
++# Local modification for Greg CorridorKey Flame Tools: optional carried-hint control.
+ """Independent file I/O and temporal scheduling for exported MLX graphs.
+ 
+ This module implements the published tensor interface; it imports no upstream
+@@ -179,10 +180,19 @@ class Outputs:
+             raise RuntimeError(f"ffmpeg export failed: {', '.join(sorted(set(failed)))}")
+ 
+ 
++def select_hint(index, initial, carried, explicit, carry_hint):
++    """Local policy: explicit first-frame hints always take precedence."""
++    if index == 0 and initial is not None:
++        return initial
++    if carry_hint:
++        return carried.get(index, explicit)
++    return explicit
++
++
+ @torch.no_grad()
+ def run(model, source, destination, scratch, *, window=4, stride=2,
+         outputs=("alpha", "fg", "checker", "cutout"), png=False,
+-        despill=1., screen="green", first_hint=None, hint_source=None, timings=None):
++        despill=1., screen="green", first_hint=None, hint_source=None, timings=None, carry_hint=True):
+     """Disk-backed features; sequential RVM; overlapping stage one; stage two batch one."""
+     scratch = Path(scratch)
+     def timed(name, function, *args, **kwargs):
+@@ -254,8 +264,7 @@ def run(model, source, destination, scratch, *, window=4, stride=2,
+             confidence = torch.zeros(1, len(indices))
+             supplied = False
+             for offset, index in enumerate(indices):
+-                value = (initial if index == 0 and initial is not None else
+-                         carry.get(index, records[offset].get("hint")))
++                value = select_hint(index, initial, carry, records[offset].get("hint"), carry_hint)
+                 if value is not None:
+                     hint[0, offset] = torch.as_tensor(value)
+                     confidence[0, offset] = .95
+@@ -268,7 +277,8 @@ def run(model, source, destination, scratch, *, window=4, stride=2,
+                                 align_corners=False).clamp(0, 1).bfloat16().float()
+             weighted = (result["baton"][0].float() * weights[:, None, None, None]).numpy()
+             for offset, index in enumerate(indices):
+-                carry[index] = aux[offset]
++                if carry_hint:
++                    carry[index] = aux[offset]
+                 if index in accumulated:
+                     accumulated[index] += weighted[offset]
+                     denominators[index] += float(weights[offset])
+@@ -291,7 +301,7 @@ def run(model, source, destination, scratch, *, window=4, stride=2,
+     (Path(destination) / "settings.json").write_text(json.dumps({
+         "engine": "corridorkey-v2-mlx", "frames": source.count, "fps": source.fps,
+         "native_hw": [source.height, source.width], "profile_hw": [h, w],
+-        "window": window, "stride": stride, "stage2_batch": 1,
++        "window": window, "stride": stride, "stage2_batch": 1, "carry_hint": carry_hint,
+         "outputs": sorted(outputs), "despill_strength": despill, "screen": screen,
+         "image_sequence": png, "audio": "not copied", "input_color": "display-referred sRGB",
+     }, indent=2) + "\n")
+diff --git a/tests/test_hint_policy.py b/tests/test_hint_policy.py
+new file mode 100644
+index 0000000..9322efc
+--- /dev/null
++++ b/tests/test_hint_policy.py
+@@ -0,0 +1,47 @@
++# SPDX-License-Identifier: Apache-2.0
++# Local regression tests added for Greg CorridorKey Flame Tools.
++"""Synthetic regression checks for the local carried-hint control."""
++import unittest
++from corridorkey_mlx.pipeline import select_hint
++
++
++class HintPolicyTests(unittest.TestCase):
++    def test_disabled_carry_does_not_feed_back_model_predictions(self):
++        self.assertIsNone(select_hint(2, None, {2: 'model-prediction'}, None, False))
++
++    def test_disabled_carry_preserves_explicit_first_and_full_frame_hints(self):
++        self.assertEqual(select_hint(0, 'initial', {0: 'carried'}, 'explicit', False), 'initial')
++        self.assertEqual(select_hint(2, None, {2: 'carried'}, 'explicit', False), 'explicit')
++
++    def test_enabled_carry_retains_previous_behavior(self):
++        self.assertEqual(select_hint(2, None, {2: 'carried'}, 'explicit', True), 'carried')
++        self.assertEqual(select_hint(3, None, {2: 'carried'}, 'explicit', True), 'explicit')
++
++class HintCLIForwardingTests(unittest.TestCase):
++    def test_no_carry_flag_reaches_pipeline(self):
++        import contextlib
++        import io
++        import tempfile
++        from pathlib import Path
++        from unittest.mock import patch
++        import cv2
++        import numpy as np
++        from corridorkey_mlx.cli import main, required_files
++        with tempfile.TemporaryDirectory() as directory:
++            root = Path(directory)
++            plate = root / 'plate.png'
++            cv2.imwrite(str(plate), np.zeros((128, 128, 3), np.uint8))
++            for path in required_files(root, 128, 128, 1):
++                path.parent.mkdir(parents=True, exist_ok=True)
++                path.write_text('{"precision":"fp32"}')
++            args = ['--input', str(plate), '--output-dir', str(root / 'out'),
++                    '--model-root', str(root), '--height', '128', '--width', '128',
++                    '--image-sequence', '--no-carry-hint']
++            with patch('corridorkey_mlx.mlx_backend.MLXModel'), patch('corridorkey_mlx.pipeline.run') as run:
++                with contextlib.redirect_stdout(io.StringIO()):
++                    self.assertEqual(main(args), 0)
++                self.assertIs(run.call_args.kwargs['carry_hint'], False)
++
++
++if __name__ == '__main__':
++    unittest.main()

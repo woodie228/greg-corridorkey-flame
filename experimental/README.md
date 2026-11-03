@@ -14,8 +14,9 @@ equally zero-padded numeric PNG sequence. It uses FP32, defaults to Hann 1/1,
 and refuses unsupported padded shapes. Published profile shapes are height × width 768×1280 and 1024×1536.
 There is no resizing. 1/1 loses temporal-window context. Use `--temporal` to
 explicitly select Hann 4/2 for sequences of four or more
-frames (and supply the matching t4 profile). This mode showed an incorrect
-rectangular retained-screen patch in the test shot and is not the default.
+frames (and supply the matching t4 profile). The original carried-hint path
+showed an incorrect retained-screen rectangle. Temporal plans now disable that
+feedback using the required runtime patch; see TEMPORAL_DIAGNOSIS.md.
 `--framewise` explicitly retains the default t1 path. The adapter never silently
 falls back when a requested t4 profile is missing. RVM state is still carried
 between frames.
@@ -102,7 +103,8 @@ arbitrary resolution, HDR preservation, performance, or Flame import.
 
 Before publishing an installer or enabling this in the Flame right-click action:
 
-1. Use the pinned runtime and CPU projection patch documented in VALIDATION.md;
+1. Use the pinned runtime and both CPU projection and temporal-hint patches
+   documented in VALIDATION.md and TEMPORAL_DIAGNOSIS.md;
    rebuild its wheel after applying the patch. Keep authorized profiles separate.
 2. Provision an isolated environment; run upstream tests and `--check` on each target Mac.
 3. Run a supported FP32 still and real moving green/blue sequence; inspect
@@ -118,8 +120,9 @@ Community API inspected on 2026-11-03: `corridorkey_mlx/cli.py` blob
 The official older `nikopueringer/corridorkey-mlx` Hiera model is not CorridorKey 2.
 
 The current validation also includes full 384-frame t1/t4 runs on authorized
-real footage. The t4 retained-screen defect and the resulting opt-in policy are
-documented in VALIDATION.md. Neither mode is production certified.
+real footage. The t4 feedback fix, explicit opt-in policy and a remaining foreground omission
+are documented in VALIDATION.md and TEMPORAL_DIAGNOSIS.md. Neither mode is
+production certified.
 
 ## Read-only pass verification
 
@@ -136,6 +139,13 @@ straight RGB against FG. The comparison reports numerical alpha differences;
 neither result is a ground-truth matte. No files are written by this validator.
 
 ## Flame handoff for a designated test project
+
+In a fresh pinned separate runtime checkout, first check
+`patches/mlx-cpu-reconstruction.patch` and
+`patches/mlx-temporal-hint-control.patch` with `git apply --check`, apply both,
+then rebuild that environment's wheel.
+An unpatched runtime fails preflight rather than silently running the original
+feedback policy.
 
 The pass folders are ready for manual sequence import. Use the source frame
 rate (PNG/runtime metadata defaults to 24 fps), inspect the SDR color assignment,

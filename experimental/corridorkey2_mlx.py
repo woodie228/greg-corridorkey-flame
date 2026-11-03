@@ -77,12 +77,16 @@ def plan(source, runtime_python, model_root, destination, *, framewise=False, te
                "--hann-chunk", str(chunk), "--hann-stride", str(stride),
                "--precision", "fp32", "--image-sequence", "--compile",
                "--outputs", *OUTPUTS]
+    if chunk > 1:
+        # Requires the local runtime patch; argparse fails safely if it is missing.
+        command.append("--no-carry-hint")
     return {"command": command, "source_frames": [p.name for p in files],
             "width": info[0], "height": info[1], "profile_hw": list(profile),
             "destination": str(destination), "color": "display-referred sRGB",
             "experimental": True, "production_validated": False,
             "temporal_window": chunk, "temporal_stride": stride,
-            "framewise_requested": framewise, "temporal_requested": temporal}
+            "framewise_requested": framewise, "temporal_requested": temporal,
+            "carry_hint": False if chunk > 1 else None}
 
 
 def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
@@ -137,7 +141,7 @@ def main():
     parser.add_argument("--output-dir", required=True)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--temporal", action="store_true",
-                      help="Opt into t4 Hann 4/2; observed a matte defect on the tested shot")
+                      help="Opt into t4 Hann 4/2 with self-generated carry disabled (requires patched runtime)")
     mode.add_argument("--framewise", action="store_true",
                         help="Explicitly use only t1 profiles; keeps RVM recurrence but loses Hann window context")
     parser.add_argument("--execute", action="store_true", help="Default prints a plan only")

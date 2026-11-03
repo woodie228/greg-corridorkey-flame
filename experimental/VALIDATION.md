@@ -216,3 +216,31 @@ It tests six shapes/bias cases against PyTorch CPU and an independent float64
 NumPy oracle and exits nonzero if compiled or uncompiled reconstruction fails.
 The generic GPU reference results are reported separately, not used as a passing
 substitute for the patched reconstruction path.
+
+## Retained-screen fix and remaining foreground issue
+
+Subsequent controlled investigation identified self-generated overlap-hint
+feedback as the trigger for the rectangular retained-screen failure. A local
+community-runtime patch adds `--no-carry-hint`; the adapter now always supplies
+it when `--temporal` is requested. t1 remains the default. Explicit artist hints
+are preserved by the runtime control. See TEMPORAL_DIAGNOSIS.md for the isolated
+variable, patch instructions and tested evidence.
+
+All 384 frames completed again with t4/Hann 4/2 and carry disabled. All 1,536
+corrected passes passed full decoding and channel checks. The failed rectangle
+was absent in inspected mattes/composites; the full-shot conservative screen-core
+scan found zero green-dominant composite pixels at the documented threshold.
+Mean screen-core alpha dropped from 0.027119 to 0.000378 (t1 control: 0.000382).
+The full-shot alpha difference from t1 dropped from 0.012280 to 0.000384. Those
+statistics are diagnostic comparisons, not ground-truth accuracy scores.
+
+Selected prefix/full outputs agree exactly and source SHA256 remains unchanged.
+The corrected review video contains 384 frames at source fps. Both patches apply
+cleanly to the pinned community source. All 25 community synthetic tests (21
+original plus four hint-policy/CLI checks) and all 15 repository tests pass.
+
+A separate foreground omission was observed near a later close-up: both t1 and
+corrected t4 remove some non-green barrier. No-hint subject selection is therefore
+not certified for retaining every non-green scene element. The feedback fix is
+validated for the observed rectangle, but the overall key is not production
+approved; hint-based foreground control and artist review remain necessary.

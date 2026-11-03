@@ -55,6 +55,8 @@ class AdapterTests(unittest.TestCase):
         command = job['command']
         self.assertEqual(command[command.index('--hann-chunk') + 1], '4')
         self.assertTrue(job['temporal_requested'])
+        self.assertIn('--no-carry-hint', command)
+        self.assertIs(job['carry_hint'], False)
 
     def test_framewise_explicitly_retains_single_frame_profile_for_sequence(self):
         for i in range(101, 106):
