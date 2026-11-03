@@ -56,8 +56,8 @@ Do not bundle weights or assume this wrapper resolves licensing eligibility.
 After confirming eligibility, obtain only the required authorized FP32 profiles
 and their manifests from the community model publisher. No downloads or setup
 are performed by this adapter. The user must supply both an existing runtime
-Python and a model-root directory. No environment or model assets were installed
-or downloaded during development.
+Python and a model-root directory. An isolated test environment and a single authorized model profile were used
+for the smoke test documented in [VALIDATION.md](VALIDATION.md). They are not distributed here.
 
 ## Plan first
 
@@ -85,16 +85,19 @@ An interrupted process can leave scratch. Do not delete another run's files.
 python3 -m unittest discover -s tests -v
 ```
 
-Eight adapter tests pass using generated valid PNG fixtures and a simulated
+Nine adapter tests pass using generated valid PNG fixtures and a simulated
 runtime. These test invocation contracts, temporal selection, frame mapping,
 shape rejection, overwrite protection, license acknowledgement and failure
-cleanup. They do **not** demonstrate real MLX inference, model parity, matte
-quality, arbitrary resolution, HDR preservation, performance, or Flame import.
+cleanup. A separate authorized still-inference smoke test passed on M5 Ultra with the
+patched runtime; see [VALIDATION.md](VALIDATION.md). Neither the unit tests nor
+the smoke test establish model parity, production matte quality, M1 compatibility,
+arbitrary resolution, HDR preservation, performance, or Flame import.
 
 Before publishing an installer or enabling this in the Flame right-click action:
 
-1. Pin a reviewed community runtime commit and authorized model manifests.
-2. Provision an isolated environment; run upstream tests and `--check`.
+1. Use the pinned runtime and CPU projection patch documented in VALIDATION.md;
+   rebuild its wheel after applying the patch. Keep authorized profiles separate.
+2. Provision an isolated environment; run upstream tests and `--check` on each target Mac.
 3. Run a supported FP32 still and real moving green/blue sequence; inspect
    matte range, foreground interpretation, temporal quality and memory.
 4. Verify source frame correspondence, frame rate and color on manual Flame

@@ -65,7 +65,11 @@ def plan(source, runtime_python, model_root, destination):
         raise ValueError("Destination must be new; existing results are never replaced")
     height, width = profile
     chunk, stride = (4, 2) if len(files) >= 4 else (1, 1)
-    command = [str(Path(runtime_python).resolve(strict=True)), "-m", "corridorkey_mlx",
+    runtime_python = Path(runtime_python).absolute()
+    if not runtime_python.is_file():
+        raise ValueError("Runtime Python does not exist: %s" % runtime_python)
+    # Resolving a venv Python symlink bypasses pyvenv.cfg and loses its packages.
+    command = [str(runtime_python), "-m", "corridorkey_mlx",
                "--input", str(source), "--model-root", str(Path(model_root).resolve(strict=True)),
                "--height", str(height), "--width", str(width),
                "--hann-chunk", str(chunk), "--hann-stride", str(stride),
@@ -74,7 +78,7 @@ def plan(source, runtime_python, model_root, destination):
     return {"command": command, "source_frames": [p.name for p in files],
             "width": info[0], "height": info[1], "profile_hw": list(profile),
             "destination": str(destination), "color": "display-referred sRGB",
-            "experimental": True, "inference_validated": False}
+            "experimental": True, "production_validated": False}
 
 
 def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
@@ -107,6 +111,7 @@ def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
         for upstream_name, flame_name in OUTPUTS.items():
             shutil.move(str(raw / upstream_name), str(destination / flame_name))
         receipt["status"] = "complete"
+        receipt["inference_completed"] = True
         receipt["note"] = "Adapter structure checks passed; this does not establish image quality or Flame validation."
     except Exception as error:
         receipt.update(status="failed", error=str(error))

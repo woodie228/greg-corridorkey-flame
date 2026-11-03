@@ -41,6 +41,12 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(job['profile_hw'], [768, 1280])
         self.assertEqual(job['command'][job['command'].index('--hann-chunk') + 1], '1')
 
+    def test_runtime_python_symlink_is_preserved(self):
+        executable = self.root / "venv-python"
+        executable.symlink_to(sys.executable)
+        job = adapter.plan(self.source, executable, self.models, self.root / "result")
+        self.assertEqual(job["command"][0], str(executable))
+
     def test_four_frames_enable_temporal_window(self):
         for i in range(101, 104):
             png(self.source / ('%04d.png' % i))
