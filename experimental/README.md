@@ -113,3 +113,33 @@ Official CUDA source inspected at `485f5e9ab759ead6138cc990776184b59d6ea971`.
 Community API inspected on 2026-11-03: `corridorkey_mlx/cli.py` blob
 `c89eca9c0b81b18797a3f2e877f967dca8e9d3fc`.
 The official older `nikopueringer/corridorkey-mlx` Hiera model is not CorridorKey 2.
+
+## Read-only pass verification
+
+Use the separate MLX environment's Python (it provides OpenCV/NumPy):
+
+```bash
+/path/to/patched-runtime/.venv/bin/python experimental/validate_outputs.py /path/to/results
+/path/to/patched-runtime/.venv/bin/python experimental/validate_outputs.py /path/to/t1-results --compare /path/to/t4-results
+```
+
+The validator fully decodes each pass, checks uint16 precision and dimensions,
+requires exact frame coverage, and verifies Processed alpha against Matte and
+straight RGB against FG. The comparison reports numerical alpha differences;
+neither result is a ground-truth matte. No files are written by this validator.
+
+## Flame handoff for a designated test project
+
+The pass folders are ready for manual sequence import. Use the source frame
+rate (PNG/runtime metadata defaults to 24 fps), inspect the SDR color assignment,
+and connect FG + Matte to the existing Matchbox. Matchbox can then composite the
+foreground over a background. Processed is straight RGB + alpha. Importing into
+Flame changes the current project; use a designated test project first.
+
+The repository's existing hook also has `_import_corridorkey_outputs(root)`,
+which imports these named folders and prepares its CorridorKey reel. A tester
+can explicitly call that helper from Flame's Python console after loading the
+hook, but this prototype has not executed or verified that operation in Flame.
+There is no automatic new right-click action, installer replacement, or claim
+that source timing and color are set correctly by import. Those remain release
+gates rather than silently changing the installed setup.

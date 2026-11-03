@@ -44,8 +44,8 @@ Model repository: `cdelta/CorridorKey-v2-MLX-fp32`, revision
 `7bb9a4443d5f1b4b696bcc0547d49ae0ac5e5f7e`.
 Downloaded only `768x1280-t1/` and accompanying licenses/manifests (about 5.07 GB).
 All 17 downloaded files listed in SHA256SUMS matched. SHA256SUMS itself was
-retrieved at the pinned revision and is not self-hashed. No t4, FP16, or Q8
-profiles were downloaded.
+retrieved at the pinned revision and is not self-hashed. For that initial still test, no t4, FP16, or Q8
+profiles were downloaded. A later explicitly authorized t4 test is described below.
 
 Input: the community repository's synthetic squirrel example, resized with
 aspect ratio preserved and padded with its corner screen color to 1280×720.
@@ -124,10 +124,51 @@ production approval: only 24 of 384 frames were tested, input was downsampled,
 no ground-truth matte was available, no quantitative temporal quality claim is
 made, and no native 1080p/t4/HDR or Flame import check was performed.
 
+## Temporal t4 excerpt comparison
+
+The matching `768x1280-t4/` profile was subsequently downloaded with explicit
+permission at the same model revision. All four t4 files matched SHA256SUMS.
+The same 24-frame real-footage excerpt completed at Hann window/stride 4/2.
+All 96 t4 output images passed full decoding, dimensions/precision/frame-coverage
+checks, and exact Processed alpha/RGB correspondence with Matte/FG.
+
+Mean absolute alpha difference between t1 and t4 was 0.001267 on the 0–1 scale.
+The largest local difference was 0.979446 at a source pillarbox edge, so the
+small global mean must not be interpreted as uniform pixel agreement. Sampled
+side-by-side previews looked broadly similar, retaining the player/crowd/barrier
+and removing the screen. A local side-by-side review video was created.
+
+Mean unwarped adjacent-frame alpha difference was 0.005694 for t1 and 0.005656
+for t4. This includes real subject motion and is **not** a flicker/accuracy
+metric or proof of better quality. Neither output is a ground-truth reference.
+
+The new read-only `validate_outputs.py` reproduces decoding and channel checks
+and alpha comparison. Four additional tests cover full decoding, alpha
+corruption, wrong precision and mismatched source frames. All 14 repository
+tests passed in the isolated environment (10 adapter + 4 decoding-validator).
+The four decoding tests skip when OpenCV/NumPy are absent.
+
+## Full 384-frame temporal run
+
+All 384 frames of the same authorized clip were subsequently processed as a
+workspace-only 1280×720 derivative with Hann 4/2 and the patched FP32 runtime.
+Inference completed, and the read-only validator fully decoded all **1,536**
+pass images. Every frame had the expected size, uint16 precision and pass names;
+Processed alpha exactly equaled Matte and Processed RGB exactly equaled FG.
+Runtime settings confirmed 384 frames, window 4, stride 2 and stage-two batch one.
+
+A 384-frame local review video was written at 24000/1001 fps and verified by
+reopening it. Source SHA256 was unchanged. Midpoint and final checker previews
+were inspected in addition to the excerpt samples. No footage, preview images,
+outputs or identifying source metadata were uploaded. This verifies processing
+coverage over this approximately 16-second shot; it is not a ground-truth matte
+assessment, full playback quality approval, long-form stress test, or a native
+1080p/Flame validation.
+
 ## Still unvalidated
 
 - M1 Ultra / M2 / M3 / M4 compatibility and memory requirements.
-- Full production-shot quality approval, long clips, temporal t4 profiles, and blue-screen quality.
+- Full production-shot quality approval, other temporal shots, long-form footage and blue-screen quality.
 - Full-model agreement with official CUDA output, and effects of other M5 GPU operations.
 - Throughput and CPU projection overhead.
 - Flame import, source timing, Matchbox compositing, color transforms and premultiplication.
