@@ -92,7 +92,7 @@ An interrupted process can leave scratch. Do not delete another run's files.
 python3 -m unittest discover -s tests -v
 ```
 
-Eleven adapter tests pass using generated valid PNG fixtures and a simulated
+Fourteen adapter tests pass using generated valid PNG fixtures and a simulated
 runtime. These test invocation contracts, temporal selection, frame mapping,
 shape rejection, overwrite protection, license acknowledgement and failure
 cleanup. Separate authorized still and six-frame translated-fixture inference tests passed
@@ -121,7 +121,9 @@ The official older `nikopueringer/corridorkey-mlx` Hiera model is not CorridorKe
 
 The current validation also includes full 384-frame t1/t4 runs on authorized
 real footage. The t4 feedback fix, explicit opt-in policy and a remaining foreground omission
-are documented in VALIDATION.md and TEMPORAL_DIAGNOSIS.md. Neither mode is
+are documented in VALIDATION.md and TEMPORAL_DIAGNOSIS.md. The optional explicit
+hint path restores the observed missing barrier on the tested shot, with
+disclosed background/edge trade-offs; see FOREGROUND_HINTS.md. No mode is
 production certified.
 
 ## Read-only pass verification
@@ -160,3 +162,12 @@ hook, but this prototype has not executed or verified that operation in Flame.
 There is no automatic new right-click action, installer replacement, or claim
 that source timing and color are set correctly by import. Those remain release
 gates rather than silently changing the installed setup.
+
+## Optional foreground hints
+
+Use `--hint-first-frame` or `--hint-sequence` for matching artist grayscale/RGBA
+PNG mattes. They condition the model and do not replace final alpha. Frame
+counts/dimensions are checked before inference. An optional rough green-screen
+hint helper is available for reviewed SDR prototypes; it is never silently
+enabled. See [FOREGROUND_HINTS.md](FOREGROUND_HINTS.md) for usage, the full-shot
+barrier/helmet test, the rejected dark-flood-fill approach and remaining limits.

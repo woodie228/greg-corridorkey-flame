@@ -244,3 +244,32 @@ corrected t4 remove some non-green barrier. No-hint subject selection is therefo
 not certified for retaining every non-green scene element. The feedback fix is
 validated for the observed rectangle, but the overall key is not production
 approved; hint-based foreground control and artist review remain necessary.
+
+## Explicit foreground-hint follow-up
+
+The lost barrier was investigated with full-frame conditioning. A first rough
+hint pilot restored it but a border-connected-dark flood-fill incorrectly cut
+into a helmet touching the top edge. That method was rejected, not shipped.
+The revised optional helper removes only uniform full-height dark border columns
+when explicitly requested. A regression test preserves dark props touching the
+frame edge. Reviewed artist hints remain preferable to an uncalibrated rule.
+
+A revised 24-frame pilot preserved both barrier and helmet. The actual updated
+adapter then processed all 384 frames with the generated full hint sequence,
+t4/Hann 4/2 and self-generated carry disabled. All 1,536 pass images passed full
+decoding and channel checks; the source hash was unchanged. The formerly missing
+barrier ROI alpha increased from 0.000159 to 0.999916, and the helmet ROI remained
+0.999904. A source-blue foreground-core proxy stayed near opaque across all
+frames (mean 0.999879; minimum per-frame mean 0.999816).
+
+No green-dominant composite pixels were detected in the conservative screen
+cores across the shot, but mean screen-core alpha rose from 0.000378 to 0.003265.
+Thin dark pillarbox-edge fringes also remain. These are disclosed trade-offs;
+there is no production approval or complete ground-truth quality claim. See
+FOREGROUND_HINTS.md for exact inputs, methods, test limitations and usage.
+
+Artist first-frame/full-sequence input validation and forwarding are now opt-in
+adapter features. The helper only creates conditioning inputs; it never masks
+final outputs or modifies source plates. All 22 repository tests pass; the
+runtime's existing 25 weight-free tests remain applicable. No footage, hints,
+outputs or weights are distributed in this repository.

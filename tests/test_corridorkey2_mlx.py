@@ -70,6 +70,30 @@ class AdapterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not both"):
             adapter.plan(self.source, sys.executable, self.models, self.root / "result", framewise=True, temporal=True)
 
+    def test_explicit_hint_sequence_is_validated_and_forwarded(self):
+        hints = self.root / 'hints'
+        hints.mkdir()
+        png(hints / '0000.png', color=0)
+        job = adapter.plan(self.source, sys.executable, self.models, self.root / 'result', hint_sequence=hints)
+        self.assertIn('--hint-video', job['command'])
+        self.assertEqual(job['explicit_hints']['sequence']['ordered_files'], ['0000.png'])
+
+    def test_hint_dimension_and_frame_count_mismatches_are_rejected(self):
+        hints = self.root / 'hints'
+        hints.mkdir()
+        png(hints / '0000.png', width=640, height=360, color=0)
+        with self.assertRaisesRegex(ValueError, 'dimensions'):
+            adapter.plan(self.source, sys.executable, self.models, self.root / 'result', hint_sequence=hints)
+        png(hints / '0001.png', color=0)
+        with self.assertRaisesRegex(ValueError, 'count'):
+            adapter.plan(self.source, sys.executable, self.models, self.root / 'result', hint_sequence=hints)
+
+    def test_first_frame_rgba_hint_is_forwarded(self):
+        hint = self.root / 'artist.png'
+        png(hint, color=6)
+        job = adapter.plan(self.source, sys.executable, self.models, self.root / 'result', hint_first_frame=hint)
+        self.assertIn('--hint-first-frame', job['command'])
+
     def test_reject_gap_exr_and_unsupported_size(self):
         png(self.source / '0102.png')
         with self.assertRaisesRegex(ValueError, 'missing'):

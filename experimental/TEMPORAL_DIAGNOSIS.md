@@ -92,9 +92,10 @@ pixels still have alpha above 0.1 (up to 2.88% in one frame), comparable to t1;
 motion edges and the heuristic mask require review. More importantly, **both t1
 and corrected t4 omit part of a non-green barrier in a later close-up**. That is
 a separate no-hint subject-selection/foreground-preservation problem. It must
-not be hidden by declaring the entire shot production-ready. Explicit artist
-or carefully validated full-frame hints are a possible next control; they have
-not yet been tested on this shot.
+not be hidden by declaring the entire shot production-ready. Subsequent explicit full-frame conditioning restored the observed barrier
+in a full-shot test, with disclosed background/edge trade-offs; see
+FOREGROUND_HINTS.md and the latest VALIDATION.md section. The no-hint omission
+remains relevant to users who do not supply that control.
 
 The observed rectangular screen failure is resolved by the controlled feedback
 policy on this shot. The deeper source of the initial auxiliary prediction error

@@ -56,7 +56,32 @@ def inspect_source(source):
     return source, files, info, profile
 
 
-def plan(source, runtime_python, model_root, destination, *, framewise=False, temporal=False):
+def inspect_hint(path, source_count, size, *, first_frame=False):
+    path = Path(path).resolve(strict=True)
+    if first_frame:
+        files = [path] if path.is_file() else []
+    else:
+        files = sorted(p for p in path.iterdir() if p.is_file() and not p.name.startswith(".")) if path.is_dir() else []
+        stems = [p.stem for p in files]
+        if files and (not all(s.isdecimal() for s in stems) or len({len(s) for s in stems}) != 1):
+            raise ValueError("Hint sequence requires equally padded numeric PNG names")
+        numbers = [int(s) for s in stems] if files else []
+        if numbers and numbers != list(range(numbers[0], numbers[0] + len(numbers))):
+            raise ValueError("Hint sequence contains missing frames")
+    expected_count = 1 if first_frame else source_count
+    if len(files) != expected_count:
+        raise ValueError("Hint frame count does not match the source")
+    for file in files:
+        if file.suffix.lower() != ".png":
+            raise ValueError("Hints must be PNG")
+        width, height, depth, color = png_info(file)
+        if (width, height) != size or color not in (0, 6):
+            raise ValueError("Hints must match source dimensions and be grayscale or RGBA PNG")
+    return path, [p.name for p in files]
+
+
+def plan(source, runtime_python, model_root, destination, *, framewise=False, temporal=False,
+         hint_first_frame=None, hint_sequence=None):
     if framewise and temporal:
         raise ValueError("Choose framewise or temporal, not both")
     source, files, info, profile = inspect_source(source)
@@ -77,6 +102,13 @@ def plan(source, runtime_python, model_root, destination, *, framewise=False, te
                "--hann-chunk", str(chunk), "--hann-stride", str(stride),
                "--precision", "fp32", "--image-sequence", "--compile",
                "--outputs", *OUTPUTS]
+    hints = {}
+    for value, key, flag, first in [(hint_first_frame, "first_frame", "--hint-first-frame", True),
+                                    (hint_sequence, "sequence", "--hint-video", False)]:
+        if value is not None:
+            path, names = inspect_hint(value, len(files), info[:2], first_frame=first)
+            command.extend([flag, str(path)])
+            hints[key] = {"path": str(path), "ordered_files": names}
     if chunk > 1:
         # Requires the local runtime patch; argparse fails safely if it is missing.
         command.append("--no-carry-hint")
@@ -86,7 +118,7 @@ def plan(source, runtime_python, model_root, destination, *, framewise=False, te
             "experimental": True, "production_validated": False,
             "temporal_window": chunk, "temporal_stride": stride,
             "framewise_requested": framewise, "temporal_requested": temporal,
-            "carry_hint": False if chunk > 1 else None}
+            "carry_hint": False if chunk > 1 else None, "explicit_hints": hints}
 
 
 def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
@@ -144,11 +176,14 @@ def main():
                       help="Opt into t4 Hann 4/2 with self-generated carry disabled (requires patched runtime)")
     mode.add_argument("--framewise", action="store_true",
                         help="Explicitly use only t1 profiles; keeps RVM recurrence but loses Hann window context")
+    parser.add_argument("--hint-first-frame", help="Artist grayscale/RGBA PNG for the first frame")
+    parser.add_argument("--hint-sequence", help="Matching ordered grayscale/RGBA PNG matte sequence")
     parser.add_argument("--execute", action="store_true", help="Default prints a plan only")
     parser.add_argument("--acknowledge-model-terms", action="store_true")
     args = parser.parse_args()
     try:
-        job = plan(args.input, args.runtime_python, args.model_root, args.output_dir, framewise=args.framewise, temporal=args.temporal)
+        job = plan(args.input, args.runtime_python, args.model_root, args.output_dir, framewise=args.framewise, temporal=args.temporal,
+                   hint_first_frame=args.hint_first_frame, hint_sequence=args.hint_sequence)
         if args.execute:
             run(job, acknowledge_model_terms=args.acknowledge_model_terms)
         print(json.dumps(job, indent=2))
