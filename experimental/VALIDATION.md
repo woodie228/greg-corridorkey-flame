@@ -26,7 +26,7 @@ Model terms remain separate and unchanged.
 
 ## Weight-free checks
 
-- Adapter: 10 tests passed, including preserving the venv Python symlink path.
+- Adapter: 11 tests passed, including preserving the venv Python symlink path.
 - Community unpatched source: 20/21 tests passed. Reconstruction parity failed.
 - Synthetic diagnostics localized errors to GPU FP32 matrix projection: up to
   0.0014 absolute projection error versus a float64 NumPy oracle. CPU projection
@@ -144,8 +144,8 @@ metric or proof of better quality. Neither output is a ground-truth reference.
 
 The new read-only `validate_outputs.py` reproduces decoding and channel checks
 and alpha comparison. Four additional tests cover full decoding, alpha
-corruption, wrong precision and mismatched source frames. All 14 repository
-tests passed in the isolated environment (10 adapter + 4 decoding-validator).
+corruption, wrong precision and mismatched source frames. All 15 repository
+tests passed in the isolated environment (11 adapter + 4 decoding-validator).
 The four decoding tests skip when OpenCV/NumPy are absent.
 
 ## Full 384-frame temporal run
@@ -168,6 +168,32 @@ outputs or identifying source metadata were uploaded. This verifies processing
 coverage over this approximately 16-second shot; it is not a ground-truth matte
 assessment, full playback quality approval, long-form stress test, or a native
 1080p/Flame validation.
+
+## Full-shot t1 control comparison
+
+The same 384-frame derivative was then processed with t1/Hann 1/1 as a control.
+All 1,536 t1 outputs passed full decoding and exact alpha/RGB channel checks.
+Together, the two full runs produced 3,072 verified pass images. Source SHA256
+remained unchanged. A separate full-shot t1 review video was written locally at
+source frame rate. Neither run modified the original or installed Flame setup.
+
+The matching t1 midpoint matte does not show the rectangular retained-screen
+patch seen in t4. Mean absolute alpha difference over the full shot is 0.012280
+on the 0–1 scale, with some local differences reaching 1.0. This is substantially
+larger than the first-24-frame comparison; that short excerpt was insufficient
+to assess later temporal behavior. The cause is unresolved. These observations
+support gating t4, not certifying t1 as an accurate ground-truth result.
+
+## Temporal mode is now explicit opt-in
+
+The matching t1 midpoint matte does not show the retained rectangular screen
+patch. This narrows the observed defect to the temporal path or its state
+handling but does not establish a cause. Because of this evidence, the adapter
+now defaults to Hann 1/1 for all sequences. `--temporal` is required to request
+Hann 4/2 on sequences of at least four frames. `--framewise` is an explicit
+alias for the default. Regression tests ensure longer inputs do not silently
+select t4 and conflicting options are rejected. This does not certify t1
+production quality; it avoids making the observed t4 defect the default.
 
 ## Still unvalidated
 

@@ -47,19 +47,26 @@ class AdapterTests(unittest.TestCase):
         job = adapter.plan(self.source, executable, self.models, self.root / "result")
         self.assertEqual(job["command"][0], str(executable))
 
-    def test_four_frames_enable_temporal_window(self):
+    def test_four_frames_enable_temporal_window_only_when_requested(self):
         for i in range(101, 104):
             png(self.source / ('%04d.png' % i))
-        command = self.job()['command']
+        self.assertEqual(self.job()['temporal_window'], 1)
+        job = adapter.plan(self.source, sys.executable, self.models, self.root / 'result', temporal=True)
+        command = job['command']
         self.assertEqual(command[command.index('--hann-chunk') + 1], '4')
+        self.assertTrue(job['temporal_requested'])
 
-    def test_framewise_opt_in_retains_single_frame_profile_for_sequence(self):
+    def test_framewise_explicitly_retains_single_frame_profile_for_sequence(self):
         for i in range(101, 106):
             png(self.source / ("%04d.png" % i))
         job = adapter.plan(self.source, sys.executable, self.models, self.root / "result", framewise=True)
         self.assertEqual(job["temporal_window"], 1)
         self.assertTrue(job["framewise_requested"])
         self.assertEqual(len(job["source_frames"]), 6)
+
+    def test_conflicting_temporal_modes_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "not both"):
+            adapter.plan(self.source, sys.executable, self.models, self.root / "result", framewise=True, temporal=True)
 
     def test_reject_gap_exr_and_unsupported_size(self):
         png(self.source / '0102.png')

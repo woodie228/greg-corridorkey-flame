@@ -56,7 +56,9 @@ def inspect_source(source):
     return source, files, info, profile
 
 
-def plan(source, runtime_python, model_root, destination, *, framewise=False):
+def plan(source, runtime_python, model_root, destination, *, framewise=False, temporal=False):
+    if framewise and temporal:
+        raise ValueError("Choose framewise or temporal, not both")
     source, files, info, profile = inspect_source(source)
     destination = Path(destination).resolve()
     if destination == source or source in destination.parents or destination in source.parents:
@@ -64,7 +66,7 @@ def plan(source, runtime_python, model_root, destination, *, framewise=False):
     if destination.exists():
         raise ValueError("Destination must be new; existing results are never replaced")
     height, width = profile
-    chunk, stride = (4, 2) if len(files) >= 4 and not framewise else (1, 1)
+    chunk, stride = (4, 2) if len(files) >= 4 and temporal else (1, 1)
     runtime_python = Path(runtime_python).absolute()
     if not runtime_python.is_file():
         raise ValueError("Runtime Python does not exist: %s" % runtime_python)
@@ -80,7 +82,7 @@ def plan(source, runtime_python, model_root, destination, *, framewise=False):
             "destination": str(destination), "color": "display-referred sRGB",
             "experimental": True, "production_validated": False,
             "temporal_window": chunk, "temporal_stride": stride,
-            "framewise_requested": framewise}
+            "framewise_requested": framewise, "temporal_requested": temporal}
 
 
 def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
@@ -133,13 +135,16 @@ def main():
     parser.add_argument("--runtime-python", required=True, help="Python in a separate community MLX runtime environment")
     parser.add_argument("--model-root", required=True)
     parser.add_argument("--output-dir", required=True)
-    parser.add_argument("--framewise", action="store_true",
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--temporal", action="store_true",
+                      help="Opt into t4 Hann 4/2; observed a matte defect on the tested shot")
+    mode.add_argument("--framewise", action="store_true",
                         help="Explicitly use only t1 profiles; keeps RVM recurrence but loses Hann window context")
     parser.add_argument("--execute", action="store_true", help="Default prints a plan only")
     parser.add_argument("--acknowledge-model-terms", action="store_true")
     args = parser.parse_args()
     try:
-        job = plan(args.input, args.runtime_python, args.model_root, args.output_dir, framewise=args.framewise)
+        job = plan(args.input, args.runtime_python, args.model_root, args.output_dir, framewise=args.framewise, temporal=args.temporal)
         if args.execute:
             run(job, acknowledge_model_terms=args.acknowledge_model_terms)
         print(json.dumps(job, indent=2))

@@ -10,12 +10,15 @@ the macOS installer. No model code or weights are bundled.
 ## Current scope
 
 The adapter accepts a display-referred sRGB RGB/RGBA PNG still or contiguous,
-equally zero-padded numeric PNG sequence. It uses FP32, chooses Hann 4/2 for
-four or more frames and 1/1 for shorter inputs, and refuses unsupported padded
-shapes. Published profile shapes are height × width 768×1280 and 1024×1536.
-There is no resizing. 1/1 loses temporal-window context. Add `--framewise`
-to explicitly use t1 profiles for longer sequences; the adapter never silently
-falls back when a t4 profile is missing. RVM state is still carried between frames.
+equally zero-padded numeric PNG sequence. It uses FP32, defaults to Hann 1/1,
+and refuses unsupported padded shapes. Published profile shapes are height × width 768×1280 and 1024×1536.
+There is no resizing. 1/1 loses temporal-window context. Use `--temporal` to
+explicitly select Hann 4/2 for sequences of four or more
+frames (and supply the matching t4 profile). This mode showed an incorrect
+rectangular retained-screen patch in the test shot and is not the default.
+`--framewise` explicitly retains the default t1 path. The adapter never silently
+falls back when a requested t4 profile is missing. RVM state is still carried
+between frames.
 The runtime settings are retained as `runtime-settings.json`.
 
 The current Flame roundtrip exports OpenEXR. Those exports **cannot be passed
@@ -88,7 +91,7 @@ An interrupted process can leave scratch. Do not delete another run's files.
 python3 -m unittest discover -s tests -v
 ```
 
-Ten adapter tests pass using generated valid PNG fixtures and a simulated
+Eleven adapter tests pass using generated valid PNG fixtures and a simulated
 runtime. These test invocation contracts, temporal selection, frame mapping,
 shape rejection, overwrite protection, license acknowledgement and failure
 cleanup. Separate authorized still and six-frame translated-fixture inference tests passed
@@ -113,6 +116,10 @@ Official CUDA source inspected at `485f5e9ab759ead6138cc990776184b59d6ea971`.
 Community API inspected on 2026-11-03: `corridorkey_mlx/cli.py` blob
 `c89eca9c0b81b18797a3f2e877f967dca8e9d3fc`.
 The official older `nikopueringer/corridorkey-mlx` Hiera model is not CorridorKey 2.
+
+The current validation also includes full 384-frame t1/t4 runs on authorized
+real footage. The t4 retained-screen defect and the resulting opt-in policy are
+documented in VALIDATION.md. Neither mode is production certified.
 
 ## Read-only pass verification
 
