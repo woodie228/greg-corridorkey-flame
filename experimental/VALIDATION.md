@@ -311,3 +311,14 @@ no import, render or project-edit command was sent, and inspection was not
 retried. Actual Flame colour/alpha/render QA, M1 Ultra validation, native-1080p
 profiles and real camera-HDR validation remain release gates. No media or model
 assets are committed, and the installed production environment is unchanged.
+
+## Native-pixel tiled 1080p review
+
+The separate overlapping-tile route completed all 384 original-resolution
+frames. Input/output are 1920×1080; four 1280×720 native crops each use the
+768×1280 padded profile. There is no full-frame 1080p model graph or source-RGB
+upscale. All 1,536 assembled PNG passes and 384 H.264 review frames decoded;
+all 38 repository tests pass. Inference took 890.29 seconds total.
+See NATIVE_1080_TILES.md for measured quality proxies, reviewed samples, exact
+method, performance scope and limitations. The native route does not change
+the earlier SDR/HDR or Flame validation gates. No media/weights are committed.

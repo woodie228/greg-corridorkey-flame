@@ -191,3 +191,7 @@ trade-off for the tested clip: use explicit confirmed active-area inference and
 selective reference-guided hints. See [the active-area recipe](ACTIVE_AREA_AND_FLAME.md)
 and [latest validation](VALIDATION.md). This remains an experimental two-pass
 workflow requiring artist review, not a universal automatic foreground rule.
+
+For the separate original-resolution crop experiment, see
+[native-pixel 1080p tiling](NATIVE_1080_TILES.md). It does not imply that a
+full-frame 1080p MLX model profile or a Flame round trip has been validated.
