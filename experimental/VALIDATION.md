@@ -273,3 +273,41 @@ adapter features. The helper only creates conditioning inputs; it never masks
 final outputs or modifies source plates. All 22 repository tests pass; the
 runtime's existing 25 weight-free tests remain applicable. No footage, hints,
 outputs or weights are distributed in this repository.
+
+## Reviewed fringe correction and linear handoff follow-up
+
+The earlier fringe and broad-hint trade-offs above are superseded for this test
+recipe by explicit active-area inference and selective reference-guided hints.
+See ACTIVE_AREA_AND_FLAME.md for the mechanism and required artist review.
+All 384 frames were rerun at the explicit 1280×720 test resolution, retaining
+the 1080×720 active image in its original canvas position. All 1,536 PNG pass
+images decoded. Excluded pillarbox alpha was exactly zero throughout. No
+active-image erosion, fixed roof mask or post-painted foreground was used.
+
+Reviewed frames 0, 192, 255 and 383 no longer show the observed vertical fringe
+or studio-backdrop contour; barrier and helmet remain. The source-blue core
+proxy mean alpha was 0.999921 (minimum per-frame mean 0.999891). Mean screen-core
+alpha was 0.000363; no green-dominant composite pixels were detected in those
+conservative cores. These are diagnostic proxies, not ground truth or a claim
+of perfect segmentation. The roof region had alpha about 0.000028 when empty
+and 0.999861 when occupied by the helmet at frame 255. The original SHA-256
+remained cc7c65bbd2ba33a70f61449efd2900a5f772639bdc824215b63e9364a82e1f8e.
+
+The reviewed SDR result was converted into 1,536 half-float linear EXRs, all
+readback verified (maximum absolute error 0.000244140625), with exact 24000/1001
+fps and straight-alpha metadata. This conversion does not recover HDR detail.
+The separate floating inference runner completed a synthetic +2-stop linear
+EXR still and four-frame temporal exercise. Float32 foreground ranges were
+[-0.00743945, 5.38610506] and [-0.00695781, 6.86033630], respectively; readback
+error was zero. These bounded tests preserve negative/above-one data but do not
+establish real camera-HDR accuracy or official CUDA photometric parity.
+
+All 34 repository tests and 27 patched community weight-free tests pass. All
+three runtime patches applied to a fresh pinned source and reproduced the
+tested files. The separate linear Matchbox compiled and packaged successfully
+with Autodesk Flame 2025.2.2 shader_builder. It is not installed or rendered in
+Flame. A request to inspect the Flame application was cancelled by the user;
+no import, render or project-edit command was sent, and inspection was not
+retried. Actual Flame colour/alpha/render QA, M1 Ultra validation, native-1080p
+profiles and real camera-HDR validation remain release gates. No media or model
+assets are committed, and the installed production environment is unchanged.

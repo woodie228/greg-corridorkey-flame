@@ -94,6 +94,16 @@ class AdapterTests(unittest.TestCase):
         job = adapter.plan(self.source, sys.executable, self.models, self.root / 'result', hint_first_frame=hint)
         self.assertIn('--hint-first-frame', job['command'])
 
+    def test_active_area_preserves_canvas_plan_and_is_forwarded(self):
+        job = adapter.plan(self.source, sys.executable, self.models, self.root / 'result', active_area=(100,0,1080,720))
+        self.assertEqual((job['width'],job['height']),(1280,720))
+        self.assertEqual(job['active_area_xywh'],[100,0,1080,720])
+        self.assertIn('--active-area',job['command'])
+
+    def test_active_area_outside_canvas_is_rejected(self):
+        with self.assertRaisesRegex(ValueError,'inside'):
+            adapter.plan(self.source, sys.executable, self.models, self.root / 'result', active_area=(100,0,1280,720))
+
     def test_reject_gap_exr_and_unsupported_size(self):
         png(self.source / '0102.png')
         with self.assertRaisesRegex(ValueError, 'missing'):

@@ -171,3 +171,23 @@ counts/dimensions are checked before inference. An optional rough green-screen
 hint helper is available for reviewed SDR prototypes; it is never silently
 enabled. See [FOREGROUND_HINTS.md](FOREGROUND_HINTS.md) for usage, the full-shot
 barrier/helmet test, the rejected dark-flood-fill approach and remaining limits.
+
+## Active area, EXR and Flame work
+
+Confirmed empty source margins can be excluded explicitly with `--active-area`
+and reflected for inference, then restored as transparent canvas without inward
+erosion. See [ACTIVE_AREA_AND_FLAME.md](ACTIVE_AREA_AND_FLAME.md) for the tested
+fringe correction, selective reference hints, EXR handoff and separate compiled
+linear Matchbox. The existing production hook/Matchbox remain untouched.
+
+A separate [experimental linear EXR runner](HDR_EXR.md) preserves unclipped float
+input/output; it has synthetic HDR still/four-frame validation only. This is
+distinct from the SDR PNG adapter and SDR-derived EXR conversion. Native
+resolution, real HDR camera material, M1 Ultra and actual Flame render/import
+checks remain gates, so no new production installer is provided.
+
+The latest reviewed fringe correction supersedes the earlier pillarbox/backdrop
+trade-off for the tested clip: use explicit confirmed active-area inference and
+selective reference-guided hints. See [the active-area recipe](ACTIVE_AREA_AND_FLAME.md)
+and [latest validation](VALIDATION.md). This remains an experimental two-pass
+workflow requiring artist review, not a universal automatic foreground rule.

@@ -93,3 +93,20 @@ All 22 repository tests pass (14 adapter, four output-validator, four hint-helpe
 The unchanged patched runtime retains its 25 passing weight-free tests. Artist
 hint quality, other wardrobe/screens/exposures, HDR/native resolution, Flame and
 M1 Ultra checks remain release gates.
+
+## Selective reviewed reference control
+
+`--reference-mattes /path/to/matching/mattes` on the hint helper can retain
+reference decisions in source-green-dominant and dark neutral pixels while
+boosting other foreground holdouts. This addresses the black backdrop/contour
+retention found when plain chroma hints treated every non-green pixel as
+foreground. It preserves semantic green-wardrobe and dark-prop decisions from
+the reference. See ACTIVE_AREA_AND_FLAME.md for thresholds, matching requirements,
+the final full-shot recipe and limitations. It does not turn the reference into
+a ground-truth matte or silently enable a second pass.
+
+The latest reviewed fringe correction supersedes the earlier pillarbox/backdrop
+trade-off for the tested clip: use explicit confirmed active-area inference and
+selective reference-guided hints. See [the active-area recipe](ACTIVE_AREA_AND_FLAME.md)
+and [latest validation](VALIDATION.md). This remains an experimental two-pass
+workflow requiring artist review, not a universal automatic foreground rule.

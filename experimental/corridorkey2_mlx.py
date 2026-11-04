@@ -81,7 +81,7 @@ def inspect_hint(path, source_count, size, *, first_frame=False):
 
 
 def plan(source, runtime_python, model_root, destination, *, framewise=False, temporal=False,
-         hint_first_frame=None, hint_sequence=None):
+         hint_first_frame=None, hint_sequence=None, active_area=None):
     if framewise and temporal:
         raise ValueError("Choose framewise or temporal, not both")
     source, files, info, profile = inspect_source(source)
@@ -90,6 +90,10 @@ def plan(source, runtime_python, model_root, destination, *, framewise=False, te
         raise ValueError("Input and destination must be separate without nesting")
     if destination.exists():
         raise ValueError("Destination must be new; existing results are never replaced")
+    if active_area is not None:
+        x, y, active_width, active_height = active_area
+        if min(x, y) < 0 or min(active_width, active_height) < 1 or x + active_width > info[0] or y + active_height > info[1]:
+            raise ValueError("Active area must be inside the source canvas")
     height, width = profile
     chunk, stride = (4, 2) if len(files) >= 4 and temporal else (1, 1)
     runtime_python = Path(runtime_python).absolute()
@@ -102,6 +106,8 @@ def plan(source, runtime_python, model_root, destination, *, framewise=False, te
                "--hann-chunk", str(chunk), "--hann-stride", str(stride),
                "--precision", "fp32", "--image-sequence", "--compile",
                "--outputs", *OUTPUTS]
+    if active_area is not None:
+        command.extend(["--active-area", *map(str, active_area)])
     hints = {}
     for value, key, flag, first in [(hint_first_frame, "first_frame", "--hint-first-frame", True),
                                     (hint_sequence, "sequence", "--hint-video", False)]:
@@ -118,12 +124,24 @@ def plan(source, runtime_python, model_root, destination, *, framewise=False, te
             "experimental": True, "production_validated": False,
             "temporal_window": chunk, "temporal_stride": stride,
             "framewise_requested": framewise, "temporal_requested": temporal,
-            "carry_hint": False if chunk > 1 else None, "explicit_hints": hints}
+            "carry_hint": False if chunk > 1 else None, "explicit_hints": hints,
+            "active_area_xywh": list(active_area) if active_area is not None else None}
 
 
 def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
     if not acknowledge_model_terms:
         raise ValueError("Read model and foundation licenses and pass --acknowledge-model-terms before inference")
+    restore_canvas = None
+    if job.get("active_area_xywh") is not None:
+        try:
+            import importlib.util
+            helper = Path(__file__).with_name("restore_active_canvas.py")
+            spec = importlib.util.spec_from_file_location("greg_restore_active_canvas", helper)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            restore_canvas = module.restore
+        except ImportError as error:
+            raise ValueError("Active-area restoration requires running the adapter with the isolated runtime Python") from error
     destination = Path(job["destination"])
     # Recheck at execution time, then create exclusively to avoid overwriting user data.
     destination.mkdir(parents=True, exist_ok=False)
@@ -136,6 +154,8 @@ def run(job, *, acknowledge_model_terms=False, runner=subprocess.run):
     try:
         runner(job["command"] + ["--check"], check=True)
         runner(job["command"] + ["--output-dir", str(raw)], check=True)
+        if restore_canvas is not None:
+            restore_canvas(raw, (job["height"], job["width"]), job["active_area_xywh"])
         expected_names = ["%06d.png" % i for i in range(len(job["source_frames"]))]
         for upstream_name in OUTPUTS:
             folder = raw / upstream_name
@@ -176,6 +196,8 @@ def main():
                       help="Opt into t4 Hann 4/2 with self-generated carry disabled (requires patched runtime)")
     mode.add_argument("--framewise", action="store_true",
                         help="Explicitly use only t1 profiles; keeps RVM recurrence but loses Hann window context")
+    parser.add_argument("--active-area", type=int, nargs=4, metavar=("X", "Y", "WIDTH", "HEIGHT"),
+                        help="Explicit image area excluding empty source margins; requires patched runtime")
     parser.add_argument("--hint-first-frame", help="Artist grayscale/RGBA PNG for the first frame")
     parser.add_argument("--hint-sequence", help="Matching ordered grayscale/RGBA PNG matte sequence")
     parser.add_argument("--execute", action="store_true", help="Default prints a plan only")
@@ -183,7 +205,7 @@ def main():
     args = parser.parse_args()
     try:
         job = plan(args.input, args.runtime_python, args.model_root, args.output_dir, framewise=args.framewise, temporal=args.temporal,
-                   hint_first_frame=args.hint_first_frame, hint_sequence=args.hint_sequence)
+                   hint_first_frame=args.hint_first_frame, hint_sequence=args.hint_sequence, active_area=args.active_area)
         if args.execute:
             run(job, acknowledge_model_terms=args.acknowledge_model_terms)
         print(json.dumps(job, indent=2))

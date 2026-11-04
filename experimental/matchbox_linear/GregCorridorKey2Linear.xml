@@ -1,0 +1,11 @@
+<ShaderNodePreset Name="Greg CorridorKey 2 Linear Experimental" Description="Unclamped linear foreground + matte handoff. No despill or colour transform. Experimental; verify alpha association in a test project." ShaderType="Matchbox" SoftwareVersion="2025.0.0" Version="2" LimitInputsToTexture="True" MatteProvider="True" SupportsTimeline="False" SupportsAction="False" SupportsTransition="False" CommercialUsePermitted="True">
+  <Shader Index="1" OutputBitDepth="Float32" GridSubdivision="1">
+    <Uniform Name="output_mode" Type="int" ValueType="Popup" Default="0" Min="0" Max="3" Inc="1" DisplayName="Output" ChannelName="Output" Row="0" Col="0" Page="0">
+      <PopupEntry Title="Straight RGBA" Value="0"/><PopupEntry Title="Straight Composite" Value="1"/><PopupEntry Title="Premultiplied FG" Value="2"/><PopupEntry Title="Matte" Value="3"/>
+    </Uniform>
+    <Uniform Name="fg_input" Type="sampler2D" Index="0" NoInput="Black" DisplayName="Linear Foreground" Mipmaps="False" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR"/>
+    <Uniform Name="matte_input" Type="sampler2D" Index="1" NoInput="Black" DisplayName="Matte RGB" Mipmaps="False" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR"/>
+    <Uniform Name="bg_input" Type="sampler2D" Index="2" NoInput="Black" DisplayName="Linear Background" Mipmaps="False" GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE" GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE" GL_TEXTURE_MAG_FILTER="GL_LINEAR" GL_TEXTURE_MIN_FILTER="GL_LINEAR"/>
+  </Shader>
+  <Page Name="Linear Key" Page="0"><Col Name="Output" Col="0" Page="0"/></Page>
+</ShaderNodePreset>
