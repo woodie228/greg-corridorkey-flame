@@ -1,0 +1,126 @@
+--- a/corridorkey_mlx/pipeline.py
++++ b/corridorkey_mlx/pipeline.py
+@@ -30,6 +30,8 @@
+ class Source:
+     path: Path
+     fps: float = 24.
++    active_area: tuple | None = None
++    profile_hw: tuple | None = None
+ 
+     def __post_init__(self):
+         self.path = Path(self.path)
+@@ -55,8 +57,17 @@
+             raise ValueError(f"Cannot read frames from {self.path}")
+         if not math.isfinite(self.fps) or self.fps <= 0:
+             raise ValueError("Frame rate must be finite and positive")
+-        self.height, self.width = first.shape[:2]
+-        self.padded = tuple(((n + 127) // 128) * 128 for n in (self.height, self.width))
++        self.raw_hw = tuple(first.shape[:2])
++        self.height, self.width = self.raw_hw
++        if self.active_area is not None:
++            x, y, width, height = self.active_area
++            if min(x, y) < 0 or min(width, height) < 1 or x + width > self.width or y + height > self.height:
++                raise ValueError("Active area must be inside the source canvas")
++            self.height, self.width = height, width
++        minimum = tuple(((n + 127) // 128) * 128 for n in (self.height, self.width))
++        self.padded = tuple(self.profile_hw) if self.profile_hw is not None else minimum
++        if any(p < n or p % 128 for p, n in zip(self.padded, (self.height, self.width))):
++            raise ValueError("Profile must contain the active source and use multiples of 128")
+ 
+     def frames(self):
+         capture = None if self.images is not None else cv2.VideoCapture(str(self.path))
+@@ -68,8 +79,11 @@
+                     ok, raw = capture.read()
+                     if not ok:
+                         raise ValueError(f"Video ended before frame {index}/{self.count}")
+-                if raw is None or raw.shape[:2] != (self.height, self.width):
++                if raw is None or tuple(raw.shape[:2]) != self.raw_hw:
+                     raise ValueError(f"Unreadable frame or changing frame dimensions at {index}")
++                if self.active_area is not None:
++                    x, y, width, height = self.active_area
++                    raw = raw[y:y + height, x:x + width]
+                 yield raw
+         finally:
+             if capture is not None:
+@@ -211,6 +225,9 @@
+         values = unit_pixels(raw)
+         if values.ndim == 3:
+             values = values[..., 3] if values.shape[2] == 4 else values[..., 0]
++        if source.active_area is not None and values.shape == source.raw_hw:
++            x, y, width, height = source.active_area
++            values = values[y:y + height, x:x + width]
+         if values.shape != (source.height, source.width):
+             raise ValueError("Hint dimensions must match input")
+         return torch.from_numpy(pad_image(values, (h, w)).copy())[None].bfloat16().float()
+@@ -301,6 +318,7 @@
+     (Path(destination) / "settings.json").write_text(json.dumps({
+         "engine": "corridorkey-v2-mlx", "frames": source.count, "fps": source.fps,
+         "native_hw": [source.height, source.width], "profile_hw": [h, w],
++        "source_canvas_hw": list(source.raw_hw), "active_area_xywh": source.active_area,
+         "window": window, "stride": stride, "stage2_batch": 1, "carry_hint": carry_hint,
+         "outputs": sorted(outputs), "despill_strength": despill, "screen": screen,
+         "image_sequence": png, "audio": "not copied", "input_color": "display-referred sRGB",
+--- a/corridorkey_mlx/cli.py
++++ b/corridorkey_mlx/cli.py
+@@ -43,6 +43,8 @@
+     p.add_argument("--output-dir", "--output_dir", dest="output_dir", type=Path)
+     p.add_argument("--model-root", "--model_root", dest="model_root", type=Path,
+                    default=Path("models"), help="Directory containing HxW-tN profiles")
++    p.add_argument("--active-area", type=int, nargs=4, metavar=("X", "Y", "WIDTH", "HEIGHT"),
++                   help="Explicit source active area; reflect-pad it to the requested profile")
+     p.add_argument("--precision", choices=["fp32", "fp16", "q8"], default="fp32",
+                    help="FP32 default; FP16/Q8 load the matching subfolder in the model repository")
+     p.add_argument("--height", type=positive_int, default=1024, help="Padded profile height")
+@@ -117,7 +119,8 @@
+     try:
+         import torch
+         from .pipeline import Source, run
+-        source = Source(args.input)
++        source = Source(args.input, active_area=args.active_area,
++                        profile_hw=(args.height, args.width) if args.active_area is not None else None)
+         if source.padded != (args.height, args.width):
+             h, w = source.padded
+             p.error(f"input pads to {h}x{w}; select --height {h} --width {w} and matching profiles")
+@@ -179,7 +182,8 @@
+                     run(model, source, args.output_dir, scratch, window=args.hann_chunk, stride=args.hann_stride,
+                         outputs=args.outputs, png=args.image_sequence, despill=args.despill_strength,
+                         screen=args.screen, first_hint=args.hint_first_frame,
+-                        hint_source=Source(args.hint_video) if args.hint_video else None, timings=timings,
++                        hint_source=Source(args.hint_video, active_area=args.active_area,
++                            profile_hw=(args.height, args.width) if args.active_area is not None else None) if args.hint_video else None, timings=timings,
+                         carry_hint=not args.no_carry_hint)
+                 seconds = time.perf_counter() - started
+             row = {"seconds": seconds, "stage_seconds": timings,
+--- /dev/null
++++ b/tests/test_active_area.py
+@@ -0,0 +1,30 @@
++# SPDX-License-Identifier: Apache-2.0
++# Local regression tests for explicit active-area inference.
++import tempfile
++from pathlib import Path
++import unittest
++import cv2
++import numpy as np
++from corridorkey_mlx.pipeline import Source, pad_image
++
++
++class ActiveAreaTests(unittest.TestCase):
++    def test_crops_only_explicit_area_then_reflects_without_resizing(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);image=np.zeros((64,128,3),np.uint8)
++            image[:,20:108]=np.arange(88,dtype=np.uint8)[None,:,None]+40
++            image[0,20:25]=0  # Legitimate dark prop on the active boundary.
++            cv2.imwrite(str(root/'0000.png'),image)
++            source=Source(root,active_area=(20,0,88,64),profile_hw=(128,128))
++            frame=next(source.frames())
++            np.testing.assert_array_equal(frame,image[:,20:108])
++            self.assertEqual(source.padded,(128,128))
++            padded=pad_image(frame,source.padded)
++            np.testing.assert_array_equal(padded[32:96,20:108],frame)
++            self.assertTrue(np.all(frame[0,:5]==0))
++
++    def test_rejects_invalid_active_area_and_small_profile(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);cv2.imwrite(str(root/'0000.png'),np.zeros((128,256,3),np.uint8))
++            with self.assertRaises(ValueError):Source(root,active_area=(250,0,20,128),profile_hw=(128,256))
++            with self.assertRaises(ValueError):Source(root,active_area=(0,0,200,128),profile_hw=(128,128))

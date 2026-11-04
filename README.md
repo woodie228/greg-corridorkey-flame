@@ -18,6 +18,15 @@ Flame integration for running an EZ-CorridorKey roundtrip from Autodesk Flame, p
 
 Intel Macs, Windows, Linux, and Flame versions older than 2023 are not supported by this package.
 
+## Experimental CorridorKey 2 work
+
+A separate opt-in MLX backend, foreground-hint controls, EXR experiments and
+linear Matchbox are documented in [experimental/README.md](experimental/README.md).
+They were tested in isolation on M5 Ultra and do not replace this stable
+installer. M1 Ultra, native-resolution/HDR production footage and actual Flame
+roundtrip validation remain release gates. The experimental work is not a new
+production release.
+
 ## Downloads
 
 Use the GitHub Release assets for normal installation:

@@ -1,0 +1,15 @@
+diff --git a/corridorkey_mlx/mlx_kernels.py b/corridorkey_mlx/mlx_kernels.py
+index c947812..1defb6d 100644
+--- a/corridorkey_mlx/mlx_kernels.py
++++ b/corridorkey_mlx/mlx_kernels.py
+@@ -37,7 +37,9 @@ def reconstruct(x, weight, bias, stride=16, padding=8):
+     _, out_channels, kh, kw = weight.shape
+     assert x.dtype == weight.dtype == mx.float32
+     assert kh == kw == 2*stride
+-    patches = x.transpose(0, 2, 3, 1) @ weight.reshape(channels, -1)
++    # Local experimental fallback: avoid inaccurate GPU FP32 projection on tested M5.
++    # This transfers the projection to CPU; performance requires separate evaluation.
++    patches = mx.matmul(x.transpose(0, 2, 3, 1), weight.reshape(channels, -1), stream=mx.cpu)
+     oh = (height-1)*stride+kh-2*padding
+     ow = (width-1)*stride+kw-2*padding
+     if bias is None:
